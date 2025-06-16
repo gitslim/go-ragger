@@ -18,10 +18,11 @@ vars:
 tasks:
   tools:
     cmds:
-      - go install github.com/go-task/task/v3/cmd/task@latest
-      - go install github.com/a-h/templ/cmd/templ@latest
-      - go install github.com/delaneyj/toolbelt/sqlc-gen-zombiezen@latest
+      - go install github.com/go-task/task/v3/cmd/task@v3.44.0
+      - go install github.com/a-h/templ/cmd/templ@v0.3.898
+      - go install github.com/delaneyj/toolbelt/sqlc-gen-zombiezen@v0.4.3
       - go install golang.org/x/tools/cmd/goimports@latest
+      - go install github.com/air-verse/air@v1.62.0
 
   tidy:
     cmds:
