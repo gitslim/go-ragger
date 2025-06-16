@@ -1,0 +1,77 @@
+# https://taskfile.dev
+
+version: "3"
+
+interval: 200ms
+
+vars:
+  PKG: "github.com/gitslim/go-ragger"
+  NAME: "server"
+  BIN_NAME: "{{.NAME}}_bin"
+  BUILD_COMMIT:
+    sh: git rev-parse --short HEAD
+  BUILD_DATE:
+    sh: git log -1 --format=%cd --date=format:"%Y%m%d"
+  BUILD_VERSION: "v1.0.0"
+  LDFLAGS: "-X {{.PKG}}/internal/version.buildVersion={{.BUILD_VERSION}} -X {{.PKG}}/internal/version.buildDate={{.BUILD_DATE}} -X {{.PKG}}/internal/version.buildCommit={{.BUILD_COMMIT}}"
+
+tasks:
+  tools:
+    cmds:
+      - go install github.com/go-task/task/v3/cmd/task@latest
+      - go install github.com/a-h/templ/cmd/templ@latest
+      - go install github.com/delaneyj/toolbelt/sqlc-gen-zombiezen@latest
+      - go install golang.org/x/tools/cmd/goimports@latest
+
+  tidy:
+    cmds:
+      - go mod tidy
+      - go mod verify
+
+  test:
+    cmds:
+      - go test -race -v ./...
+
+  coverage:
+    cmds:
+      - go test ./... -coverprofile=cover.out
+      - go tool cover -func=cover.out | grep total
+      - go tool cover -html=cover.out -o cover.html
+
+  sqlc:
+    dir: sql
+    sources:
+      - "**/*.sql"
+    cmds:
+      - sqlc generate
+      - goimports -w .
+
+  templ:
+    env:
+      TEMPL_EXPERIMENT: rawgo
+    generates:
+      - "**/*_templ.go"
+    sources:
+      - "**/*.templ"
+    cmds:
+      - templ generate .
+
+  kill:
+    cmds:
+      - killall -q {{.BIN_NAME}}  || echo "Process was not running."
+
+  build:
+    cmds:
+      - go build -ldflags="{{.LDFLAGS}}" -o ./build/{{.BIN_NAME}} cmd/{{.NAME}}/main.go
+
+  watch:
+    deps:
+      - kill
+      - templ
+    cmds:
+      - air -build.cmd "templ generate && go build -o ./{{.BIN_NAME}} cmd/{{.NAME}}/main.go" -build.bin "./{{.BIN_NAME}}"
+
+  default:
+    deps:
+      - watch
+    silent: false

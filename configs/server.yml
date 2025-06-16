@@ -1,0 +1,2 @@
+server_address: "localhost:8080"
+dsn: "postgres://postgres:postgres@localhost:5432/ragger?sslmode=disable"
