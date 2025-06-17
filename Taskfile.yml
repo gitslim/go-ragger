@@ -74,6 +74,11 @@ tasks:
       - task: migrate-up
       - task: sqlc-generate
 
+  seed:
+    desc: "Запустить сиды"
+    cmds:
+      - go run ./cmd/seeder/main.go --dsn "{{.DSN}}"
+
   templ-generate:
     desc: "Сгенерировать шаблоны"
     env:
