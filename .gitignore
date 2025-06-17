@@ -33,6 +33,11 @@ go.work.sum
 .vscode/
 
 .task/
+
+# Generated files
+*_templ.go
+internal/db/sqlc/
+
 build/
 tmp/
 golangci-lint/

@@ -14,40 +14,68 @@ vars:
     sh: git log -1 --format=%cd --date=format:"%Y%m%d"
   BUILD_VERSION: "v1.0.0"
   LDFLAGS: "-X {{.PKG}}/internal/version.buildVersion={{.BUILD_VERSION}} -X {{.PKG}}/internal/version.buildDate={{.BUILD_DATE}} -X {{.PKG}}/internal/version.buildCommit={{.BUILD_COMMIT}}"
+  DSN: "postgres://postgres:postgres@localhost:5432/ragger?sslmode=disable"
 
 tasks:
   tools:
+    desc: "Установить утилиты"
     cmds:
       - go install github.com/go-task/task/v3/cmd/task@v3.44.0
       - go install github.com/a-h/templ/cmd/templ@v0.3.898
-      - go install github.com/delaneyj/toolbelt/sqlc-gen-zombiezen@v0.4.3
-      - go install golang.org/x/tools/cmd/goimports@latest
       - go install github.com/air-verse/air@v1.62.0
+      - go install github.com/pressly/goose/v3/cmd/goose@v3.24.3
 
   tidy:
+    desc: "Установить и проверить пакеты"
     cmds:
       - go mod tidy
       - go mod verify
 
   test:
+    desc: "Запустить тесты"
     cmds:
       - go test -race -v ./...
 
   coverage:
+    desc: "Запустить покрытие кода тестами"
     cmds:
       - go test ./... -coverprofile=cover.out
       - go tool cover -func=cover.out | grep total
       - go tool cover -html=cover.out -o cover.html
 
-  sqlc:
-    dir: sql
-    sources:
-      - "**/*.sql"
+  migrate-up:
+    desc: "Применить миграции"
     cmds:
-      - sqlc generate
-      - goimports -w .
+      - goose -dir ./internal/db/migrations postgres "{{.DSN}}" up
 
-  templ:
+  migrate-down:
+    desc: "Откатить последнюю миграцию"
+    cmds:
+      - goose -dir ./internal/db/migrations postgres "{{.DSN}}" down
+
+  migrate-status:
+    desc: "Показать статус миграций"
+    cmds:
+      - goose -dir ./internal/db/migrations postgres "{{.DSN}}" status
+
+  sqlc-generate:
+    desc: "Сгенерировать код с помощью sqlc"
+    cmds:
+      - sqlc generate -f ./internal/db/sqlc.yaml
+
+  sqlc-validate:
+    desc: "Проверить SQL-запросы на ошибки без генерации"
+    cmds:
+      - sqlc compile
+
+  db-setup:
+    desc: "Обновить БД и сгенерировать код sqlc"
+    cmds:
+      - task: migrate-up
+      - task: sqlc-generate
+
+  templ-generate:
+    desc: "Сгенерировать шаблоны"
     env:
       TEMPL_EXPERIMENT: rawgo
     generates:
@@ -58,21 +86,25 @@ tasks:
       - templ generate .
 
   kill:
+    desc: "Убить запущенные процессы"
     cmds:
       - killall -q {{.BIN_NAME}}  || echo "Process was not running."
 
   build:
+    desc: "Собрать проект"
     cmds:
       - go build -ldflags="{{.LDFLAGS}}" -o ./build/{{.BIN_NAME}} cmd/{{.NAME}}/main.go
 
   watch:
+    desc: "Запустить в режиме разработки с hot-reload"
     deps:
       - kill
-      - templ
+      - templ-generate
     cmds:
-      - air -build.cmd "templ generate && go build -o ./{{.BIN_NAME}} cmd/{{.NAME}}/main.go" -build.bin "./{{.BIN_NAME}}"
+      - air -build.cmd "templ generate && go build -o ./tmp/{{.BIN_NAME}} cmd/{{.NAME}}/main.go" -build.bin "./tmp/{{.BIN_NAME}}"
 
   default:
+    desc: "Запуск задач по умолчанию"
     deps:
       - watch
     silent: false
