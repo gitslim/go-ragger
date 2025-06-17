@@ -1,0 +1,14 @@
+package home 
+
+import "net/http"
+import "github.com/gitslim/go-ragger/internal/web/tpl"
+
+templ PageHome(r *http.Request) {
+	@tpl.Page(r) {
+		<div class="home-page">
+			<div class="container">
+				<h2 class="h2 text-center">Домашняя страница</h2>
+			</div>
+		</div>
+	}
+}

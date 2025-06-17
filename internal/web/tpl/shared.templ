@@ -1,0 +1,91 @@
+package tpl
+
+import (
+	"net/http"
+	"strings"
+)
+
+templ errorMessages(errs ...error) {
+	<div id="errorMessages">
+		<ul class="error-messages">
+			for _,err :=range errs {
+				<li>{ err.Error() }</li>
+			}
+		</ul>
+	</div>
+}
+
+templ header(r *http.Request) {
+	<nav class="navbar navbar-expand-lg bg-body-tertiary">
+		<div class="container">
+			<a class="navbar-brand" href="/">Ragger</a>
+			<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+				<span class="navbar-toggler-icon"></span>
+			</button>
+			<div class="collapse navbar-collapse" id="navbarSupportedContent">
+				<ul class="navbar-nav me-auto mb-2 mb-lg-0">
+					@navLinkItem(r, "/docs") {
+						Документация
+					}
+				</ul>
+				<div class="nav-item dropdown">
+					<a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Аккаунт</a>
+					<ul class="dropdown-menu">
+						<li>
+							<a href="/auth/login" class="dropdown-item">Войти</a>
+						</li>
+						<li>
+							<a href="/auth/register" class="dropdown-item">Регистрация</a>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</nav>
+}
+
+templ navLinkItem(r *http.Request, url string) {
+	<li class="nav-item">
+		<a
+			class={ "nav-link", templ.KV("active",strings.HasPrefix(r.URL.Path, url)) }
+			href={ templ.SafeURL(url) }
+		>
+			{ children... }
+		</a>
+	</li>
+}
+
+templ footer() {
+	<footer>
+		<div class="container text-center">
+			<span class="attribution">
+				База знаний на основе RAG @ <a href="/">Ragger</a>
+			</span>
+		</div>
+	</footer>
+}
+
+templ Page(r *http.Request) {
+	<!DOCTYPE html>
+	<html lang="ru">
+		@head()
+		<body class="d-flex flex-column min-vh-100">
+			@header(r)
+			<main class="flex-grow-1">
+				{ children... }
+			</main>
+			@footer()
+			<script src="/static/js/bootstrap.bundle.min.js"></script>
+			<script src="/static/js/datastar.js"></script>
+		</body>
+	</html>
+}
+
+templ head() {
+	<head>
+		<meta charset="utf-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1"/>
+		<title>Go Ragger</title>
+		<link href="/static/css/bootstrap.min.css" rel="stylesheet"/>
+	</head>
+}
