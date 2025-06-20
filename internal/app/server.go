@@ -2,6 +2,7 @@ package app
 
 import (
 	"github.com/gitslim/go-ragger/internal/config"
+	"github.com/gitslim/go-ragger/internal/db"
 	"github.com/gitslim/go-ragger/internal/logger"
 	"github.com/gitslim/go-ragger/internal/version"
 	"github.com/gitslim/go-ragger/internal/web"
@@ -15,6 +16,7 @@ func CreateServerApp() fx.Option {
 		logger.Module,
 		config.Module,
 		web.Module,
+		db.Module,
 	)
 }
 

@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/gitslim/go-ragger/internal/db/seeds"
+	"github.com/gitslim/go-ragger/internal/db/sqlc"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -19,5 +20,7 @@ func main() {
 	}
 	defer pool.Close()
 
-	seeds.RunUsersSeeds(pool)
+	db := sqlc.New(pool)
+
+	seeds.RunUsersSeeds(db)
 }

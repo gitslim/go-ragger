@@ -2,9 +2,10 @@ package home
 
 import "net/http"
 import "github.com/gitslim/go-ragger/internal/web/tpl"
+import "github.com/gitslim/go-ragger/internal/db/sqlc"
 
-templ PageHome(r *http.Request) {
-	@tpl.Page(r) {
+templ PageHome(r *http.Request, u *sqlc.User) {
+	@tpl.Page(r, u) {
 		<div class="home-page">
 			<div class="container">
 				<h2 class="h2 text-center">Домашняя страница</h2>

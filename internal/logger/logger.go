@@ -1,26 +1,25 @@
 package logger
 
 import (
-	"fmt"
 	"log/slog"
 	"os"
+
+	"github.com/gitslim/go-ragger/internal/config"
 )
 
-func SetupLogger() {
-	// Настраиваем логгер
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-	slog.SetDefault(logger)
-}
-
-func SetupFileLogger(fileName string) {
-	// Открываем файл для логирования
-	logFile, err := os.OpenFile(fileName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
-	if err != nil {
-		panic(fmt.Errorf("failed to open log file: %w", err))
+func NewLogger(cfg *config.ServerConfig) *slog.Logger {
+	lvl := new(slog.LevelVar)
+	if cfg.Debug {
+		lvl.Set(slog.LevelDebug)
+	} else {
+		lvl.Set(slog.LevelInfo)
 	}
 
-	// Настраиваем логгер
-	logger := slog.New(slog.NewJSONHandler(logFile, nil))
+	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
+		Level: lvl,
+	}))
+
 	slog.SetDefault(logger)
 
+	return logger
 }

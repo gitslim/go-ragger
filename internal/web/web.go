@@ -7,6 +7,9 @@ import (
 	"time"
 
 	"github.com/gitslim/go-ragger/internal/config"
+	"github.com/gitslim/go-ragger/internal/db/sqlc"
+	"github.com/gitslim/go-ragger/internal/util"
+	"github.com/gitslim/go-ragger/internal/web/auth"
 	"github.com/gitslim/go-ragger/internal/web/home"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -14,15 +17,13 @@ import (
 	"go.uber.org/fx"
 )
 
-const sessionKey = "ragger"
-
-func RegisterHTTPServerHooks(lc fx.Lifecycle, cfg *config.ServerConfig) {
+func RegisterHTTPServerHooks(lc fx.Lifecycle, log *slog.Logger, cfg *config.ServerConfig, db *sqlc.Queries) {
 	var srv *http.Server
 
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
 
-			sessionStore := sessions.NewCookieStore([]byte(sessionKey))
+			sessionStore := sessions.NewCookieStore([]byte(util.SessionKey))
 			sessionStore.MaxAge(int(24 * time.Hour / time.Second))
 
 			router := chi.NewRouter()
@@ -31,27 +32,33 @@ func RegisterHTTPServerHooks(lc fx.Lifecycle, cfg *config.ServerConfig) {
 				middleware.Recoverer,
 				func(next http.Handler) http.Handler {
 					return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-						session, err := sessionStore.Get(r, sessionKey)
+						session, err := sessionStore.Get(r, util.SessionKey)
 						if err != nil {
 							http.Error(w, "failed to get session", http.StatusInternalServerError)
 							return
 						}
 
-						// User from session
-						userID, ok := session.Values["userID"].(int64)
+						userID, ok := session.Values[util.UserIDKey].(int32)
 						if !ok {
 							next.ServeHTTP(w, r)
 							return
 						}
-						slog.Debug("Request user", "userID", userID)
 
-						next.ServeHTTP(w, r.WithContext(r.Context()))
+						user, err := db.GetUserById(r.Context(), int32(userID))
+						if err != nil {
+							http.Error(w, "failed to get user by ID", http.StatusInternalServerError)
+							return
+
+						}
+						ctx := util.ContextWithUser(r.Context(), &user)
+						next.ServeHTTP(w, r.WithContext(ctx))
 					})
 				},
 			)
 
 			setupStaticRoute(router)
 			home.SetupRoutes(router)
+			auth.SetupAuthRoutes(router, log, db, sessionStore)
 
 			srv = &http.Server{
 				Addr:    ":8080",

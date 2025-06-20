@@ -66,7 +66,7 @@ tasks:
   sqlc-validate:
     desc: "Проверить SQL-запросы на ошибки без генерации"
     cmds:
-      - sqlc compile
+      - sqlc compile -f ./internal/db/sqlc.yaml
 
   db-setup:
     desc: "Обновить БД и сгенерировать код sqlc"
@@ -74,7 +74,7 @@ tasks:
       - task: migrate-up
       - task: sqlc-generate
 
-  seed:
+  db-seed:
     desc: "Запустить сиды"
     cmds:
       - go run ./cmd/seeder/main.go --dsn "{{.DSN}}"

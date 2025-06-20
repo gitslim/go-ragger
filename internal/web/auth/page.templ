@@ -1,0 +1,97 @@
+package auth
+
+import (
+	"github.com/gitslim/go-ragger/internal/db/sqlc"
+	"github.com/gitslim/go-ragger/internal/web/tpl"
+	"net/http"
+)
+
+templ PageAuthenticationLogin(r *http.Request, u *sqlc.User) {
+	@tpl.Page(r, u) {
+		<div
+			class="auth-page"
+		>
+			<div class="container page">
+				<div class="row">
+					<div class="col-md-6 offset-md-3 col-xs-12">
+						<h1 class="text-xs-center">Войти</h1>
+						<p class="text-xs-center">
+							<a href="/auth/register">Зарегистрироваться</a>
+						</p>
+						@tpl.ErrorMessages()
+						<form>
+							<fieldset class="form-group mb-3">
+								<input
+									name="email"
+									autocomplete="email"
+									class="form-control form-control-lg"
+									type="text"
+									placeholder="Email"
+								/>
+							</fieldset>
+							<fieldset class="form-group mb-3">
+								<input
+									name="password"
+									autocomplete="current-password"
+									class="form-control form-control-lg"
+									type="password"
+									placeholder="Password"
+								/>
+							</fieldset>
+							<button
+								class="btn btn-lg btn-primary pull-xs-right"
+								data-on-click="@post('/auth/login', {contentType: 'form'})"
+							>
+								Войти
+							</button>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+	}
+}
+
+templ PageAuthenticationRegister(r *http.Request, u *sqlc.User) {
+	@tpl.Page(r, u) {
+		<div
+			class="auth-page"
+		>
+			<div class="container page">
+				<div class="row">
+					<div class="col-md-6 offset-md-3 col-xs-12">
+						<h1 class="text-xs-center">Зарегистрироваться</h1>
+						<p class="text-xs-center">
+							<a href="/auth/login">Войти</a>
+						</p>
+						@tpl.ErrorMessages()
+						<form>
+							<fieldset class="form-group mb-3">
+								<input
+									name="email"
+									autocomplete="email"
+									class="form-control form-control-lg"
+									type="text"
+									placeholder="Email"
+								/>
+							</fieldset>
+							<fieldset class="form-group mb-3">
+								<input
+									name="password"
+									autocomplete="current-password"
+									class="form-control form-control-lg"
+									type="password"
+									placeholder="Password"
+								/>
+							</fieldset>
+							<button
+								class="btn btn-lg btn-primary pull-xs-right"
+								data-on-click="@post('/auth/register', {contentType: 'form'})"
+							>Зарегистрироваться</button>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+	}
+}

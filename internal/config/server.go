@@ -2,34 +2,38 @@ package config
 
 import (
 	"fmt"
-	"log/slog"
 
-	"github.com/spf13/viper"
+	"github.com/caarlos0/env/v6"
+	"github.com/spf13/pflag"
 )
 
 type ServerConfig struct {
-	ServerAddress string `mapstructure:"server_address"`
-	DSN           string `mapstructure:"dsn"`
+	ServerAddress string `env:"SERVER_ADDRESS" envDefault:"127.0.0.1:8080"`
+	DSN           string `env:"DSN" envDefault:"postgres://postgres:postgres@localhost:5432/ragger?sslmode=disable"`
+	Debug         bool   `env:"DEBUG" envDefault:"false"`
 }
 
 func NewServerConfig() (*ServerConfig, error) {
 	var cfg ServerConfig
-
-	viper.SetConfigName("server")
-	viper.AddConfigPath("./configs/")
-	viper.SetConfigType("yaml")
-
-	viper.AutomaticEnv()
-
-	if err := viper.ReadInConfig(); err != nil {
-		return nil, fmt.Errorf("viper.ReadInConfig: %s", err)
+	if err := env.Parse(&cfg); err != nil {
+		return nil, fmt.Errorf("env.Parse: %w", err)
 	}
 
-	if err := viper.Unmarshal(&cfg); err != nil {
-		return nil, fmt.Errorf("viper.Unmarshal: %s", err)
-	}
+	pflag.String("server_address", cfg.ServerAddress, "Address to listen on")
+	pflag.String("dsn", cfg.DSN, "Database DSN")
+	pflag.Bool("debug", cfg.Debug, "Show debug logs")
 
-	slog.Info("Server config loaded", "config", cfg)
+	pflag.Parse()
+
+	if val, err := pflag.CommandLine.GetString("server_address"); err == nil && val != "" {
+		cfg.ServerAddress = val
+	}
+	if val, err := pflag.CommandLine.GetString("dsn"); err == nil && val != "" {
+		cfg.DSN = val
+	}
+	if val, err := pflag.CommandLine.GetBool("debug"); err == nil {
+		cfg.Debug = val
+	}
 
 	return &cfg, nil
 }

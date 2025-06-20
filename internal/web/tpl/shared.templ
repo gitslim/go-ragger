@@ -1,21 +1,22 @@
 package tpl
 
 import (
+	"github.com/gitslim/go-ragger/internal/db/sqlc"
 	"net/http"
 	"strings"
 )
 
-templ errorMessages(errs ...error) {
+templ ErrorMessages(errs ...error) {
 	<div id="errorMessages">
-		<ul class="error-messages">
+		<div class="error-messages">
 			for _,err :=range errs {
-				<li>{ err.Error() }</li>
+				<div class="alert alert-danger" role="alert">{ err.Error() }</div>
 			}
-		</ul>
+		</div>
 	</div>
 }
 
-templ header(r *http.Request) {
+templ header(r *http.Request, user *sqlc.User) {
 	<nav class="navbar navbar-expand-lg bg-body-tertiary">
 		<div class="container">
 			<a class="navbar-brand" href="/">Ragger</a>
@@ -29,14 +30,32 @@ templ header(r *http.Request) {
 					}
 				</ul>
 				<div class="nav-item dropdown">
-					<a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Аккаунт</a>
+					<a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+						if user == nil {
+							Аккаунт
+						} else {
+							{ user.Email }
+						}
+					</a>
 					<ul class="dropdown-menu">
-						<li>
-							<a href="/auth/login" class="dropdown-item">Войти</a>
-						</li>
-						<li>
-							<a href="/auth/register" class="dropdown-item">Регистрация</a>
-						</li>
+						if user == nil {
+							<li>
+								<a href="/auth/login" class="dropdown-item">Войти</a>
+							</li>
+							<li>
+								<a href="/auth/register" class="dropdown-item">Регистрация</a>
+							</li>
+						} else {
+							<li>
+								<a
+									href="#"
+									data-on-click="@post('/auth/logout')"
+									class="dropdown-item"
+								>
+									Выйти
+								</a>
+							</li>
+						}
 					</ul>
 				</div>
 			</div>
@@ -65,18 +84,18 @@ templ footer() {
 	</footer>
 }
 
-templ Page(r *http.Request) {
+templ Page(r *http.Request, u *sqlc.User) {
 	<!DOCTYPE html>
 	<html lang="ru">
 		@head()
 		<body class="d-flex flex-column min-vh-100">
-			@header(r)
+			@header(r, u)
 			<main class="flex-grow-1">
 				{ children... }
 			</main>
 			@footer()
 			<script src="/static/js/bootstrap.bundle.min.js"></script>
-			<script src="/static/js/datastar.js"></script>
+			<script src="/static/js/datastar.js" type="module"></script>
 		</body>
 	</html>
 }
