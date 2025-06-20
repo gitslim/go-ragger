@@ -15,7 +15,9 @@ vars:
     sh: git log -1 --format=%cd --date=format:"%Y%m%d"
   BUILD_VERSION: "v1.0.0"
   LDFLAGS: "-X {{.PKG}}/internal/version.buildVersion={{.BUILD_VERSION}} -X {{.PKG}}/internal/version.buildDate={{.BUILD_DATE}} -X {{.PKG}}/internal/version.buildCommit={{.BUILD_COMMIT}}"
-  DSN: "postgres://postgres:postgres@localhost:5432/ragger?sslmode=disable"
+  DB_NAME: "ragger"
+  DSN: "postgres://postgres:postgres@localhost:5432/{{.DB_NAME}}?sslmode=disable"
+  COMPOSE_CMD: "docker compose -f deployments/docker/docker-compose.yml"
 
 tasks:
   tools:
@@ -25,7 +27,7 @@ tasks:
       - go install github.com/a-h/templ/cmd/templ@v0.3.898
       - go install github.com/air-verse/air@v1.62.0
       - go install github.com/pressly/goose/v3/cmd/goose@v3.24.3
-      - go install -v github.com/ogen-go/ogen/cmd/ogen@v1.14.0
+      - go install github.com/ogen-go/ogen/cmd/ogen@v1.14.0
 
   tidy:
     desc: "Установить и проверить пакеты"
@@ -86,13 +88,6 @@ tasks:
     cmds:
       - go run ./cmd/seeder/main.go --dsn "{{.DSN}}"
 
-  db-reset:
-    desc: "Сброс и сидинг бд"
-    cmds:
-      - task: migrate-down
-      - task: db-update
-      - task: db-seed
-
   templ-generate:
     desc: "Сгенерировать шаблоны"
     env:
@@ -109,15 +104,42 @@ tasks:
     cmds:
       - ogen --config internal/chunkr/ogen.yaml --target internal/chunkr/api --clean internal/chunkr/openapi-3.0.json
 
+  docker:up:
+    desc: "Down docker services"
+    cmds:
+      - "{{.COMPOSE_CMD}} up -d"
+
+  docker:stop:
+    desc: "Stop docker services"
+    cmds:
+      - "{{.COMPOSE_CMD}} stop"
+
+  docker:down:
+    desc: "Down docker services"
+    cmds:
+      - "{{.COMPOSE_CMD}} down"
+
+  docker:reset:
+    desc: "Recreate docker services"
+    cmds:
+      - task: docker:stop
+      - "{{.COMPOSE_CMD}} rm -fv"
+      - task: docker:down
+      - task: docker:up
+  docker:logs:
+    desc: "Log tail docker services"
+    cmds:
+      - "{{.COMPOSE_CMD}} logs -f"
+
   reset-all:
     desc: "Полный reset с регенерацией"
     deps:
       - kill
-      - migrate-reset
       - db-update
       - db-seed
       - templ-generate
       - chunkr-generate
+      - tidy
 
   kill:
     desc: "Убить запущенные процессы"

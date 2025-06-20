@@ -8,10 +8,10 @@ import (
 )
 
 type ServerConfig struct {
-	ServerAddress string `env:"SERVER_ADDRESS" envDefault:"127.0.0.1:8080"`
+	ServerAddress string `env:"SERVER_ADDRESS" envDefault:"localhost:8080"`
 	DSN           string `env:"DSN" envDefault:"postgres://postgres:postgres@localhost:5432/ragger?sslmode=disable"`
 	Debug         bool   `env:"DEBUG" envDefault:"false"`
-	ChunkrURL     string `env:"CHUNKR_URL" envDefault:"127.0.0.1:8888"`
+	ChunkrURL     string `env:"CHUNKR_URL" envDefault:"localhost:8888"`
 	ChunkrAPIKey  string `env:"CHUNKR_API_KEY" envDefault:""`
 }
 
