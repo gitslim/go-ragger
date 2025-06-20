@@ -46,7 +46,10 @@ func RegisterHTTPServerHooks(lc fx.Lifecycle, log *slog.Logger, cfg *config.Serv
 
 						user, err := db.GetUserById(r.Context(), int32(userID))
 						if err != nil {
-							http.Error(w, "failed to get user by ID", http.StatusInternalServerError)
+							// Сбрасываем userID если не найден в бд
+							delete(session.Values, util.UserIDKey)
+							session.Save(r, w)
+							http.Redirect(w, r, "/auth/login", http.StatusTemporaryRedirect)
 							return
 
 						}
@@ -61,7 +64,7 @@ func RegisterHTTPServerHooks(lc fx.Lifecycle, log *slog.Logger, cfg *config.Serv
 			auth.SetupAuthRoutes(router, log, db, sessionStore)
 
 			srv = &http.Server{
-				Addr:    ":8080",
+				Addr:    cfg.ServerAddress,
 				Handler: router,
 			}
 

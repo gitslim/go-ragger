@@ -1,4 +1,5 @@
 # https://taskfile.dev
+# TODO: отрефакторить имена задач (сделать с категориями (:)) и уменьшить количество
 
 version: "3"
 
@@ -24,6 +25,7 @@ tasks:
       - go install github.com/a-h/templ/cmd/templ@v0.3.898
       - go install github.com/air-verse/air@v1.62.0
       - go install github.com/pressly/goose/v3/cmd/goose@v3.24.3
+      - go install -v github.com/ogen-go/ogen/cmd/ogen@v1.14.0
 
   tidy:
     desc: "Установить и проверить пакеты"
@@ -42,6 +44,11 @@ tasks:
       - go test ./... -coverprofile=cover.out
       - go tool cover -func=cover.out | grep total
       - go tool cover -html=cover.out -o cover.html
+
+  migrate-reset:
+    desc: "Сбросить миграции"
+    cmds:
+      - goose -dir ./internal/db/migrations postgres "{{.DSN}}" reset
 
   migrate-up:
     desc: "Применить миграции"
@@ -68,7 +75,7 @@ tasks:
     cmds:
       - sqlc compile -f ./internal/db/sqlc.yaml
 
-  db-setup:
+  db-update:
     desc: "Обновить БД и сгенерировать код sqlc"
     cmds:
       - task: migrate-up
@@ -78,6 +85,13 @@ tasks:
     desc: "Запустить сиды"
     cmds:
       - go run ./cmd/seeder/main.go --dsn "{{.DSN}}"
+
+  db-reset:
+    desc: "Сброс и сидинг бд"
+    cmds:
+      - task: migrate-down
+      - task: db-update
+      - task: db-seed
 
   templ-generate:
     desc: "Сгенерировать шаблоны"
@@ -89,6 +103,21 @@ tasks:
       - "**/*.templ"
     cmds:
       - templ generate .
+
+  chunkr-generate:
+    desc: "Сгенерировать chunkr.ai клиент"
+    cmds:
+      - ogen --config internal/chunkr/ogen.yaml --target internal/chunkr/api --clean internal/chunkr/openapi-3.0.json
+
+  reset-all:
+    desc: "Полный reset с регенерацией"
+    deps:
+      - kill
+      - migrate-reset
+      - db-update
+      - db-seed
+      - templ-generate
+      - chunkr-generate
 
   kill:
     desc: "Убить запущенные процессы"

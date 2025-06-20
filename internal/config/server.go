@@ -11,6 +11,8 @@ type ServerConfig struct {
 	ServerAddress string `env:"SERVER_ADDRESS" envDefault:"127.0.0.1:8080"`
 	DSN           string `env:"DSN" envDefault:"postgres://postgres:postgres@localhost:5432/ragger?sslmode=disable"`
 	Debug         bool   `env:"DEBUG" envDefault:"false"`
+	ChunkrURL     string `env:"CHUNKR_URL" envDefault:"127.0.0.1:8888"`
+	ChunkrAPIKey  string `env:"CHUNKR_API_KEY" envDefault:""`
 }
 
 func NewServerConfig() (*ServerConfig, error) {
@@ -22,6 +24,8 @@ func NewServerConfig() (*ServerConfig, error) {
 	pflag.String("server_address", cfg.ServerAddress, "Address to listen on")
 	pflag.String("dsn", cfg.DSN, "Database DSN")
 	pflag.Bool("debug", cfg.Debug, "Show debug logs")
+	pflag.String("chunkr_url", cfg.ChunkrURL, "Chunkr api server url")
+	pflag.String("chunkr_api_key", cfg.ChunkrAPIKey, "Chunkr api key")
 
 	pflag.Parse()
 
@@ -33,6 +37,12 @@ func NewServerConfig() (*ServerConfig, error) {
 	}
 	if val, err := pflag.CommandLine.GetBool("debug"); err == nil {
 		cfg.Debug = val
+	}
+	if val, err := pflag.CommandLine.GetString("chunkr_url"); err == nil && val != "" {
+		cfg.ChunkrURL = val
+	}
+	if val, err := pflag.CommandLine.GetString("chunkr_api_key"); err == nil && val != "" {
+		cfg.ChunkrAPIKey = val
 	}
 
 	return &cfg, nil

@@ -37,6 +37,7 @@ go.work.sum
 # Generated files
 *_templ.go
 internal/db/sqlc/
+internal/chunkr/api/
 
 build/
 tmp/

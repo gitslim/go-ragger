@@ -1,6 +1,7 @@
 package app
 
 import (
+	"github.com/gitslim/go-ragger/internal/chunkr"
 	"github.com/gitslim/go-ragger/internal/config"
 	"github.com/gitslim/go-ragger/internal/db"
 	"github.com/gitslim/go-ragger/internal/logger"
@@ -17,6 +18,7 @@ func CreateServerApp() fx.Option {
 		config.Module,
 		web.Module,
 		db.Module,
+		chunkr.Module,
 	)
 }
 
