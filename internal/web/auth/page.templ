@@ -3,13 +3,21 @@ package auth
 import (
 	"github.com/gitslim/go-ragger/internal/db/sqlc"
 	"github.com/gitslim/go-ragger/internal/web/tpl"
+	"github.com/starfederation/datastar/sdk/go"
 	"net/http"
 )
 
-templ PageAuthenticationLogin(r *http.Request, u *sqlc.User) {
+type LoginSignals struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+templ PageAuthenticationLogin(r *http.Request, signals *LoginSignals, u *sqlc.User) {
 	@tpl.Page(r, u) {
 		<div
+			id="login"
 			class="auth-page"
+			data-signals={ templ.JSONString(signals) }
 		>
 			<div class="container page">
 				<div class="row">
@@ -19,32 +27,34 @@ templ PageAuthenticationLogin(r *http.Request, u *sqlc.User) {
 							<a href="/auth/register">Зарегистрироваться</a>
 						</p>
 						@tpl.ErrorMessages()
-						<form>
+						<div>
 							<fieldset class="form-group mb-3">
 								<input
-									name="email"
+									id="email"
 									autocomplete="email"
 									class="form-control form-control-lg"
 									type="text"
 									placeholder="Email"
+									data-bind-email
 								/>
 							</fieldset>
 							<fieldset class="form-group mb-3">
 								<input
-									name="password"
+									id="password"
 									autocomplete="current-password"
 									class="form-control form-control-lg"
 									type="password"
 									placeholder="Password"
+									data-bind-password
 								/>
 							</fieldset>
 							<button
 								class="btn btn-lg btn-primary pull-xs-right"
-								data-on-click="@post('/auth/login', {contentType: 'form'})"
+								data-on-click={ datastar.PostSSE("/auth/login") }
 							>
 								Войти
 							</button>
-						</form>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -52,10 +62,17 @@ templ PageAuthenticationLogin(r *http.Request, u *sqlc.User) {
 	}
 }
 
-templ PageAuthenticationRegister(r *http.Request, u *sqlc.User) {
+type RegisterSignals struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+templ PageAuthenticationRegister(r *http.Request, signals *RegisterSignals, u *sqlc.User) {
 	@tpl.Page(r, u) {
 		<div
+			id="register"
 			class="auth-page"
+			data-signals={ templ.JSONString(signals) }
 		>
 			<div class="container page">
 				<div class="row">
@@ -65,30 +82,32 @@ templ PageAuthenticationRegister(r *http.Request, u *sqlc.User) {
 							<a href="/auth/login">Войти</a>
 						</p>
 						@tpl.ErrorMessages()
-						<form>
+						<div>
 							<fieldset class="form-group mb-3">
 								<input
-									name="email"
+									id="email"
 									autocomplete="email"
 									class="form-control form-control-lg"
 									type="text"
 									placeholder="Email"
+									data-bind-email
 								/>
 							</fieldset>
 							<fieldset class="form-group mb-3">
 								<input
-									name="password"
+									id="password"
 									autocomplete="current-password"
 									class="form-control form-control-lg"
 									type="password"
 									placeholder="Password"
+									data-bind-password
 								/>
 							</fieldset>
 							<button
 								class="btn btn-lg btn-primary pull-xs-right"
-								data-on-click="@post('/auth/register', {contentType: 'form'})"
+								data-on-click={ datastar.PostSSE("/auth/register") }
 							>Зарегистрироваться</button>
-						</form>
+						</div>
 					</div>
 				</div>
 			</div>

@@ -8,11 +8,15 @@ import (
 	"github.com/gitslim/go-ragger/internal/config"
 )
 
-type Sec struct {
+type Client struct {
+	api.Client
+}
+
+type sec struct {
 	apiKey string
 }
 
-func (s *Sec) APIKey(ctx context.Context, operationName api.OperationName) (api.APIKey, error) {
+func (s *sec) APIKey(ctx context.Context, operationName api.OperationName) (api.APIKey, error) {
 	if s.apiKey == "" {
 		return api.APIKey{}, fmt.Errorf("API key is empty")
 	}
@@ -21,13 +25,14 @@ func (s *Sec) APIKey(ctx context.Context, operationName api.OperationName) (api.
 	}, nil
 }
 
-func NewClient(config *config.ServerConfig) (api.Client, error) {
-	securitySource := &Sec{apiKey: config.ChunkrURL}
+func NewClient(config *config.ServerConfig) (*Client, error) {
+	securitySource := &sec{apiKey: config.ChunkrURL}
 
 	client, err := api.NewClient(config.ChunkrURL, securitySource)
 	if err != nil {
-		return api.Client{}, err
+		return &Client{}, err
 	}
 
-	return *client, nil
+	return &Client{Client: *client}, nil
+
 }

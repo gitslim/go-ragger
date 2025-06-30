@@ -3,12 +3,14 @@ package auth
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"strings"
 
 	"github.com/gitslim/go-ragger/internal/db/sqlc"
 	"github.com/gitslim/go-ragger/internal/util"
+	"github.com/gitslim/go-ragger/internal/web/errs"
 	"github.com/gitslim/go-ragger/internal/web/tpl"
 	"github.com/go-chi/chi/v5"
 	"github.com/gorilla/sessions"
@@ -43,33 +45,54 @@ func SetupAuthRoutes(r chi.Router, log *slog.Logger, db *sqlc.Queries, sessionSt
 					return
 				}
 
-				PageAuthenticationLogin(r, nil).Render(r.Context(), w)
+				signals := &LoginSignals{}
+
+				PageAuthenticationLogin(r, signals, nil).Render(r.Context(), w)
 			})
 
 			loginRouter.Post("/", func(w http.ResponseWriter, r *http.Request) {
-				if err := r.ParseMultipartForm(1 << 20); err != nil {
-					http.Error(w, "Failed to parse multipart form", http.StatusBadRequest)
-					return
+				var appError error
+
+				// if err := r.ParseMultipartForm(1 << 20); err != nil {
+				// 	http.Error(w, "Failed to parse multipart form", http.StatusBadRequest)
+				// 	return
+				// }
+
+				signals := &LoginSignals{}
+				if err := datastar.ReadSignals(r, &signals); err != nil {
+					http.Error(w, fmt.Sprintf("error unmarshalling form: %s", err), http.StatusBadRequest)
 				}
 
-				user, err := db.GetUserByEmail(r.Context(), r.FormValue("email"))
+				user, err := db.GetUserByEmail(r.Context(), signals.Email)
 				if err != nil {
-					err = errors.New("Пользователь не найден")
-				} else {
-					err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(r.FormValue("password")))
+					appError = errs.ErrBadCredentials
 				}
 
-				if err == nil {
-					storeUserToSession(r, w, sessionStore, user)
+				err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(signals.Password))
+				if err != nil {
+					appError = errs.ErrBadCredentials
+				} else {
+					sess, err := sessionStore.Get(r, util.SessionKey)
+					if err != nil {
+						http.Error(w, "failed to get session", http.StatusInternalServerError)
+						return
+					}
+
+					sess.Values[util.UserIDKey] = user.ID
+					if err := sess.Save(r, w); err != nil {
+						http.Error(w, "failed to save session", http.StatusInternalServerError)
+						return
+					}
 				}
 
 				sse := datastar.NewSSE(w, r)
-				if err != nil {
-					sse.MergeFragmentTempl(tpl.ErrorMessages(err))
-					return
-				}
 
-				sse.Redirect("/")
+				errs.ShowErrors(sse)
+				if appError != nil {
+					errs.ShowErrors(sse, appError)
+				} else {
+					sse.Redirect("/")
+				}
 			})
 		})
 
@@ -81,7 +104,9 @@ func SetupAuthRoutes(r chi.Router, log *slog.Logger, db *sqlc.Queries, sessionSt
 					return
 				}
 
-				PageAuthenticationRegister(r, nil).Render(r.Context(), w)
+				signals := &RegisterSignals{}
+
+				PageAuthenticationRegister(r, signals, nil).Render(r.Context(), w)
 			})
 
 			registerRouter.Post("/", func(w http.ResponseWriter, r *http.Request) {
@@ -90,13 +115,13 @@ func SetupAuthRoutes(r chi.Router, log *slog.Logger, db *sqlc.Queries, sessionSt
 					return
 				}
 
-				if err := r.ParseMultipartForm(1 << 20); err != nil {
-					http.Error(w, "Failed to parse multipart form", http.StatusBadRequest)
-					return
+				signals := &RegisterSignals{}
+				if err := datastar.ReadSignals(r, &signals); err != nil {
+					http.Error(w, fmt.Sprintf("error unmarshalling form: %s", err), http.StatusBadRequest)
 				}
 
-				email := strings.TrimSpace(r.FormValue("email"))
-				password := strings.TrimSpace(r.FormValue("password"))
+				email := strings.TrimSpace(signals.Email)
+				password := strings.TrimSpace(signals.Password)
 
 				sse := datastar.NewSSE(w, r)
 
@@ -106,6 +131,7 @@ func SetupAuthRoutes(r chi.Router, log *slog.Logger, db *sqlc.Queries, sessionSt
 					ec := tpl.ErrorMessages(validationErrors...)
 					sse.MergeFragmentTempl(ec)
 				}
+				appendAndSendValidationErrors()
 
 				if email == "" {
 					appendAndSendValidationErrors(errors.New("Email обязателен"))
@@ -144,18 +170,4 @@ func SetupAuthRoutes(r chi.Router, log *slog.Logger, db *sqlc.Queries, sessionSt
 		})
 
 	})
-}
-
-func storeUserToSession(r *http.Request, w http.ResponseWriter, sessionStore sessions.Store, user sqlc.User) {
-	sess, err := sessionStore.Get(r, util.SessionKey)
-	if err != nil {
-		http.Error(w, "failed to get session", http.StatusInternalServerError)
-		return
-	}
-
-	sess.Values[util.UserIDKey] = user.ID
-	if err := sess.Save(r, w); err != nil {
-		http.Error(w, "failed to save session", http.StatusInternalServerError)
-		return
-	}
 }

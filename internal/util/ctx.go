@@ -14,3 +14,8 @@ func UserFromContext(ctx context.Context) (*sqlc.User, bool) {
 func ContextWithUser(ctx context.Context, user *sqlc.User) context.Context {
 	return context.WithValue(ctx, UserKey, user)
 }
+
+func IsAuthenticated(ctx context.Context) bool {
+	_, ok := UserFromContext(ctx)
+	return ok
+}

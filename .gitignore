@@ -44,3 +44,5 @@ tmp/
 golangci-lint/
 cover.out
 cover.html
+
+demo-data/

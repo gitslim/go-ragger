@@ -6,6 +6,16 @@ import (
 	"strings"
 )
 
+templ Icon(icon string, attrs ...string) {
+	<iconify-icon icon={ icon } { KVPairsAttrs(attrs...)... } noobserver></iconify-icon>
+}
+
+templ HeaderIconLink(iconName, href string) {
+	<a target="_blank" rel="noopener noreferrer" href={ templ.SafeURL(href) }>
+		@Icon(iconName)
+	</a>
+}
+
 templ ErrorMessages(errs ...error) {
 	<div id="errorMessages">
 		<div class="error-messages">
@@ -25,8 +35,13 @@ templ header(r *http.Request, user *sqlc.User) {
 			</button>
 			<div class="collapse navbar-collapse" id="navbarSupportedContent">
 				<ul class="navbar-nav me-auto mb-2 mb-lg-0">
-					@navLinkItem(r, "/docs") {
-						Документация
+					if user != nil {
+						@navLinkItem(r, "/documents") {
+							Документы
+						}
+					}
+					@navLinkItem(r, "/faq") {
+						FAQ
 					}
 				</ul>
 				<div class="nav-item dropdown">
@@ -91,11 +106,14 @@ templ Page(r *http.Request, u *sqlc.User) {
 		<body class="d-flex flex-column min-vh-100">
 			@header(r, u)
 			<main class="flex-grow-1">
-				{ children... }
+				<div class="container py-4">
+					{ children... }
+				</div>
 			</main>
 			@footer()
 			<script src="/static/js/bootstrap.bundle.min.js"></script>
 			<script src="/static/js/datastar.js" type="module"></script>
+			<script src="/static/js/iconify-icon.min.js"></script>
 		</body>
 	</html>
 }
@@ -105,6 +123,9 @@ templ head() {
 		<meta charset="utf-8"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1"/>
 		<title>Go Ragger</title>
-		<link href="/static/css/bootstrap.min.css" rel="stylesheet"/>
+		<link
+			href="/static/css/bootstrap.min.css"
+			rel="stylesheet"
+		/>
 	</head>
 }

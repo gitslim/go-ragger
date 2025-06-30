@@ -1,0 +1,53 @@
+package documents
+
+import (
+	"github.com/gitslim/go-ragger/internal/db/sqlc"
+	"github.com/gitslim/go-ragger/internal/web/tpl"
+	"net/http"
+)
+
+type ListSignals struct {
+	Limit  int `json:"limit"`
+	Offset int `json:"offset"`
+}
+
+templ PageDocumentList(r *http.Request, u *sqlc.User, signals *ListSignals) {
+	@tpl.Page(r, u) {
+		<div
+			id="documents"
+			data-signals={ templ.JSONString(signals) }
+		>
+			<a class="btn btn-link" href="/upload">Загрузить документы</a>
+			<table class="table table-striped">
+				<caption>Загруженные документы</caption>
+				<thead>
+					<tr>
+						<th>Имя</th>
+						<th>MIME</th>
+						<th>Размер</th>
+						<th>Статус</th>
+					</tr>
+				</thead>
+				<tbody
+					id="documents_rows"
+					data-on-load="@get('/documents/load')"
+				></tbody>
+			</table>
+		</div>
+	}
+}
+
+templ DocumentRows(rows []sqlc.ListDocumentsRow) {
+	<tbody
+		id="documents_rows"
+	>
+		for _, row := range rows {
+			<tr>
+				<td>{ row.FileName }</td>
+				<td>{ row.MimeType }</td>
+				<td>{ row.FileSize }</td>
+				<td>{ row.Status }</td>
+			</tr>
+		}
+	</tbody>
+}

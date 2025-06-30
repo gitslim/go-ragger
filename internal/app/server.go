@@ -1,14 +1,22 @@
 package app
 
 import (
+	"encoding/gob"
+
 	"github.com/gitslim/go-ragger/internal/chunkr"
 	"github.com/gitslim/go-ragger/internal/config"
 	"github.com/gitslim/go-ragger/internal/db"
 	"github.com/gitslim/go-ragger/internal/logger"
 	"github.com/gitslim/go-ragger/internal/version"
 	"github.com/gitslim/go-ragger/internal/web"
+	"github.com/google/uuid"
 	"go.uber.org/fx"
 )
+
+func init() {
+	// Регистрируем uuid.UUID для работы с gob
+	gob.Register(uuid.UUID{})
+}
 
 func CreateServerApp() fx.Option {
 	return fx.Options(

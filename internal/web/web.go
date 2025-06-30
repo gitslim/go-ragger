@@ -6,18 +6,22 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gitslim/go-ragger/internal/chunkr"
 	"github.com/gitslim/go-ragger/internal/config"
 	"github.com/gitslim/go-ragger/internal/db/sqlc"
 	"github.com/gitslim/go-ragger/internal/util"
 	"github.com/gitslim/go-ragger/internal/web/auth"
+	"github.com/gitslim/go-ragger/internal/web/documents"
 	"github.com/gitslim/go-ragger/internal/web/home"
+	"github.com/gitslim/go-ragger/internal/web/upload"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/google/uuid"
 	"github.com/gorilla/sessions"
 	"go.uber.org/fx"
 )
 
-func RegisterHTTPServerHooks(lc fx.Lifecycle, log *slog.Logger, cfg *config.ServerConfig, db *sqlc.Queries) {
+func RegisterHTTPServerHooks(lc fx.Lifecycle, log *slog.Logger, cfg *config.ServerConfig, db *sqlc.Queries, chunkr *chunkr.Client) {
 	var srv *http.Server
 
 	lc.Append(fx.Hook{
@@ -38,13 +42,14 @@ func RegisterHTTPServerHooks(lc fx.Lifecycle, log *slog.Logger, cfg *config.Serv
 							return
 						}
 
-						userID, ok := session.Values[util.UserIDKey].(int32)
+						userID, ok := session.Values[util.UserIDKey]
+						log.Debug("req", "userID", userID, "session values", session.Values)
 						if !ok {
 							next.ServeHTTP(w, r)
 							return
 						}
 
-						user, err := db.GetUserById(r.Context(), int32(userID))
+						user, err := db.GetUserById(r.Context(), userID.(uuid.UUID))
 						if err != nil {
 							// Сбрасываем userID если не найден в бд
 							delete(session.Values, util.UserIDKey)
@@ -62,6 +67,8 @@ func RegisterHTTPServerHooks(lc fx.Lifecycle, log *slog.Logger, cfg *config.Serv
 			setupStaticRoute(router)
 			home.SetupRoutes(router)
 			auth.SetupAuthRoutes(router, log, db, sessionStore)
+			documents.SetupRoutes(router, log, db)
+			upload.SetupFileUpload(router, log, db)
 
 			srv = &http.Server{
 				Addr:    cfg.ServerAddress,

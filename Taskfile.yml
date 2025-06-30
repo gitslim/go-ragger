@@ -126,6 +126,7 @@ tasks:
       - "{{.COMPOSE_CMD}} rm -fv"
       - task: docker:down
       - task: docker:up
+
   docker:logs:
     desc: "Log tail docker services"
     cmds:
@@ -133,13 +134,15 @@ tasks:
 
   reset-all:
     desc: "Полный reset с регенерацией"
-    deps:
-      - kill
-      - db-update
-      - db-seed
-      - templ-generate
-      - chunkr-generate
-      - tidy
+    cmds:
+      - task: kill
+      - task: tidy
+      - task: sqlc-generate
+      - task: templ-generate
+      - task: chunkr-generate
+      - task: migrate-reset
+      - task: migrate-up
+      - task: db-seed
 
   kill:
     desc: "Убить запущенные процессы"
