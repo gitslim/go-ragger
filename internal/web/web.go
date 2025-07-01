@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gitslim/go-ragger/internal/chunkr"
 	"github.com/gitslim/go-ragger/internal/config"
 	"github.com/gitslim/go-ragger/internal/db/sqlc"
 	"github.com/gitslim/go-ragger/internal/util"
@@ -21,7 +20,7 @@ import (
 	"go.uber.org/fx"
 )
 
-func RegisterHTTPServerHooks(lc fx.Lifecycle, log *slog.Logger, cfg *config.ServerConfig, db *sqlc.Queries, chunkr *chunkr.Client) {
+func RegisterHTTPServerHooks(lc fx.Lifecycle, log *slog.Logger, cfg *config.ServerConfig, db *sqlc.Queries) {
 	var srv *http.Server
 
 	lc.Append(fx.Hook{

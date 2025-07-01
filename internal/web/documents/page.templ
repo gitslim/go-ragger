@@ -26,6 +26,7 @@ templ PageDocumentList(r *http.Request, u *sqlc.User, signals *ListSignals) {
 						<th>MIME</th>
 						<th>Размер</th>
 						<th>Статус</th>
+						<th>TaskID</th>
 					</tr>
 				</thead>
 				<tbody
@@ -47,6 +48,7 @@ templ DocumentRows(rows []sqlc.ListDocumentsRow) {
 				<td>{ row.MimeType }</td>
 				<td>{ row.FileSize }</td>
 				<td>{ row.Status }</td>
+				<td>{ row.ChunkrTaskID.String }</td>
 			</tr>
 		}
 	</tbody>

@@ -16,6 +16,7 @@ CREATE TABLE documents (
     file_size BIGINT NOT NULL,
     file_hash BYTEA NOT NULL,
     status document_status NOT NULL DEFAULT 'pending',
+    chunkr_task_id TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -24,6 +25,7 @@ CREATE INDEX idx_documents_file_name ON documents(file_name);
 CREATE INDEX idx_documents_mime_type ON documents(mime_type);
 CREATE INDEX idx_documents_file_hash ON documents(file_hash);
 CREATE INDEX idx_documents_status ON documents(status);
+CREATE UNIQUE INDEX idx_documents_user_file_hash ON documents(user_id, file_hash);
 -- +goose StatementEnd
 
 -- +goose Down
@@ -35,4 +37,5 @@ DROP INDEX IF EXISTS idx_documents_file_name;
 DROP INDEX IF EXISTS idx_documents_mime_type;
 DROP INDEX IF EXISTS idx_documents_file_hash;
 DROP INDEX IF EXISTS idx_documents_status;
+DROP INDEX IF EXISTS idx_documents_user_file_hash;
 -- +goose StatementEnd

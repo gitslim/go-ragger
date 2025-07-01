@@ -47,6 +47,7 @@ SELECT
     mime_type,
     file_size,
     status,
+    chunkr_task_id,
     created_at
 FROM documents
 WHERE 
@@ -83,3 +84,26 @@ FROM documents
 WHERE status = $1
 ORDER BY created_at ASC
 LIMIT $2;
+
+-- name: LockDocumentForProcessing :one
+UPDATE documents
+SET 
+    status = 'processing',
+    updated_at = NOW()
+WHERE id = $1 AND status = 'pending'
+RETURNING *;
+
+-- name: ResetStuckDocuments :exec
+UPDATE documents
+SET status = 'pending'
+WHERE status = 'processing' 
+AND updated_at < NOW() - INTERVAL '60 minutes';
+
+-- name: SetChunkrTaskID :one
+UPDATE documents
+SET 
+    chunkr_task_id = $2,
+    updated_at = NOW()
+WHERE id = $1
+RETURNING *;
+

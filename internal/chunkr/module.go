@@ -8,4 +8,5 @@ var Module = fx.Module("chunkr",
 	fx.Provide(
 		NewClient,
 	),
+	fx.Invoke(RunDocumentProcessor),
 )
