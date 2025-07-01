@@ -3,6 +3,7 @@
 CREATE TYPE document_status AS ENUM (
     'pending',
     'processing',
+    'checking',
     'completed',
     'failed'
 );
@@ -17,6 +18,7 @@ CREATE TABLE documents (
     file_hash BYTEA NOT NULL,
     status document_status NOT NULL DEFAULT 'pending',
     chunkr_task_id TEXT,
+    chunkr_result JSONB,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

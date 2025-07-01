@@ -107,3 +107,26 @@ SET
 WHERE id = $1
 RETURNING *;
 
+-- name: GetProcessingDocuments :many
+SELECT *
+FROM documents
+WHERE status = 'processing'
+ORDER BY created_at ASC
+LIMIT $1;
+
+-- name: LockDocumentForChecking :one
+UPDATE documents
+SET 
+    status = 'checking',
+    updated_at = NOW()
+WHERE id = $1 AND status = 'processing'
+RETURNING *;
+
+-- name: SetChunkrResult :one
+UPDATE documents
+SET 
+    chunkr_result = $2,
+    status = 'completed',
+    updated_at = NOW()
+WHERE id = $1
+RETURNING *;

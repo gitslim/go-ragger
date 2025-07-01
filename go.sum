@@ -13,8 +13,8 @@ github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc h1:U9qPSI2PIWSS1
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/delaneyj/gostar v0.8.0 h1:uT1JR+77P5ePL4BVTXsKNLtwUUtMAu/dNLryjEk95RA=
 github.com/delaneyj/gostar v0.8.0/go.mod h1:mlxRWAVbntRR2VWlpXAzt7y9HY+bQtEm/lsyFnGLx/w=
-github.com/gitslim/chunkr-ai-sdk/sdk/go/chunkrai v0.0.0-20250701094430-fe6cf836afbf h1:YacA/8wu6KpmFw1SE+jIfLF7ICQyCql9eXM2tyOEw1w=
-github.com/gitslim/chunkr-ai-sdk/sdk/go/chunkrai v0.0.0-20250701094430-fe6cf836afbf/go.mod h1:xHKb5Zcl4GUFnd/HOOj0yNZSulkjP9gRy37cKUnlZnY=
+github.com/gitslim/chunkr-ai-sdk/sdk/go/chunkrai v0.0.0-20250701213412-1414eb51838c h1:3DjqWFSTfWHWyI6V/53+Y1RPva8EQVsJnBa1Uskg4tc=
+github.com/gitslim/chunkr-ai-sdk/sdk/go/chunkrai v0.0.0-20250701213412-1414eb51838c/go.mod h1:xHKb5Zcl4GUFnd/HOOj0yNZSulkjP9gRy37cKUnlZnY=
 github.com/go-chi/chi/v5 v5.2.1 h1:KOIHODQj58PmL80G2Eak4WdvUzjSJSm0vG72crDCqb8=
 github.com/go-chi/chi/v5 v5.2.1/go.mod h1:L2yAIGWB3H+phAw1NxKwWM+7eUH/lU8pOMm5hHcoops=
 github.com/goccy/go-json v0.10.4 h1:JSwxQzIqKfmFX1swYPpUThQZp/Ka4wzJdK0LWVytLPM=

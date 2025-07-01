@@ -5,7 +5,7 @@ go 1.24.2
 require (
 	github.com/a-h/templ v0.3.898
 	github.com/caarlos0/env/v6 v6.10.1
-	github.com/gitslim/chunkr-ai-sdk/sdk/go/chunkrai v0.0.0-20250701094430-fe6cf836afbf
+	github.com/gitslim/chunkr-ai-sdk/sdk/go/chunkrai v0.0.0-20250701213412-1414eb51838c
 	github.com/go-chi/chi/v5 v5.2.1
 	github.com/goccy/go-json v0.10.4
 	github.com/google/uuid v1.6.0
