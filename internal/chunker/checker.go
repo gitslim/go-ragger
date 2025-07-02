@@ -1,4 +1,4 @@
-package chunkr
+package chunker
 
 import (
 	"context"
@@ -13,8 +13,8 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func (p *DocumentProcessor) documentCheckerBatch(ctx context.Context, logger *slog.Logger) error {
-	docs, err := p.db.GetProcessingDocuments(ctx, int32(p.cfg.BatchSize))
+func (p *Chunker) checkerBatch(ctx context.Context, logger *slog.Logger) error {
+	docs, err := p.db.GetChunkingDocuments(ctx, int32(p.cfg.BatchSize))
 	if err != nil {
 		return fmt.Errorf("get processing documents: %w", err)
 	}
@@ -30,10 +30,10 @@ func (p *DocumentProcessor) documentCheckerBatch(ctx context.Context, logger *sl
 	return nil
 }
 
-func (p *DocumentProcessor) checkDocument(ctx context.Context, docID uuid.UUID) error {
+func (p *Chunker) checkDocument(ctx context.Context, docID uuid.UUID) error {
 	tx, err := p.pool.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
-		return fmt.Errorf("begin transaction: %w", err)
+		return fmt.Errorf("begin document checking transaction: %w", err)
 	}
 	defer tx.Rollback(ctx)
 
@@ -44,10 +44,10 @@ func (p *DocumentProcessor) checkDocument(ctx context.Context, docID uuid.UUID) 
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil
 		}
-		return fmt.Errorf("lock document: %w", err)
+		return fmt.Errorf("lock document for checking: %w", err)
 	}
 
-	p.logger.Info("checking document",
+	p.logger.Debug("checking document",
 		"doc_id", doc.ID,
 		"file_name", doc.FileName)
 
@@ -60,43 +60,43 @@ func (p *DocumentProcessor) checkDocument(ctx context.Context, docID uuid.UUID) 
 	case chunkrai.StatusProcessing, chunkrai.StatusStarting:
 		if err := q.UpdateDocumentStatus(ctx, sqlc.UpdateDocumentStatusParams{
 			ID:     doc.ID,
-			Status: sqlc.DocumentStatusProcessing,
+			Status: sqlc.DocumentStatusChunking,
 		}); err != nil {
-			return fmt.Errorf("update status: %w", err)
+			return fmt.Errorf("failed to mark document as chunking: %w", err)
 		}
 
 	case chunkrai.StatusFailed, chunkrai.StatusCancelled:
 		if err := q.UpdateDocumentStatus(ctx, sqlc.UpdateDocumentStatusParams{
 			ID:     doc.ID,
-			Status: sqlc.DocumentStatusFailed,
+			Status: sqlc.DocumentStatusChunkfail,
 		}); err != nil {
-			return fmt.Errorf("update status: %w", err)
+			return fmt.Errorf("failed to mark document as chunkfail: %w", err)
 		}
 
 	case chunkrai.StatusSucceeded:
 		data, err := json.Marshal(res)
 		p.logger.Debug("chunkr task succeeded", "result", data)
 		if err != nil {
-			return fmt.Errorf("failed marshal chunkr result: %w", err)
+			return fmt.Errorf("failed marshal chunking result: %w", err)
 		}
-		_, err = q.SetChunkrResult(ctx, sqlc.SetChunkrResultParams{
+		_, err = q.SetChunkingResult(ctx, sqlc.SetChunkingResultParams{
 			ID:           doc.ID,
 			ChunkrResult: data})
 		if err != nil {
-			return fmt.Errorf("failed to save chunkr result: %w", err)
+			return fmt.Errorf("failed to save chunking result: %w", err)
 		}
 	}
 
 	return tx.Commit(ctx)
 }
 
-func (p *DocumentProcessor) getChunkrTask(ctx context.Context, doc sqlc.Document) (*chunkrai.TaskResponse, error) {
+func (p *Chunker) getChunkrTask(ctx context.Context, doc sqlc.Document) (*chunkrai.TaskResponse, error) {
 	taskID := doc.ChunkrTaskID.String
 	ptr := &taskID
 
-	res, err := p.client.Task.GetTaskRoute(ctx, ptr, &chunkrai.GetTaskRouteRequest{})
+	res, err := p.chunkrAIClient.Task.GetTaskRoute(ctx, ptr, &chunkrai.GetTaskRouteRequest{})
 	if err != nil {
-		return nil, fmt.Errorf("failed to get task %v: %w", doc.ChunkrTaskID.String, err)
+		return nil, fmt.Errorf("failed to get chunkr task %v: %w", doc.ChunkrTaskID.String, err)
 	}
 
 	return res, nil

@@ -85,18 +85,18 @@ WHERE status = $1
 ORDER BY created_at ASC
 LIMIT $2;
 
--- name: LockDocumentForProcessing :one
+-- name: LockDocumentForChunking :one
 UPDATE documents
 SET 
-    status = 'processing',
+    status = 'chunking',
     updated_at = NOW()
 WHERE id = $1 AND status = 'pending'
 RETURNING *;
 
--- name: ResetStuckDocuments :exec
+-- name: ResetStuckChunkingDocuments :exec
 UPDATE documents
 SET status = 'pending'
-WHERE status = 'processing' 
+WHERE status = 'chunking' 
 AND updated_at < NOW() - INTERVAL '60 minutes';
 
 -- name: SetChunkrTaskID :one
@@ -107,10 +107,10 @@ SET
 WHERE id = $1
 RETURNING *;
 
--- name: GetProcessingDocuments :many
+-- name: GetChunkingDocuments :many
 SELECT *
 FROM documents
-WHERE status = 'processing'
+WHERE status = 'chunking'
 ORDER BY created_at ASC
 LIMIT $1;
 
@@ -119,14 +119,30 @@ UPDATE documents
 SET 
     status = 'checking',
     updated_at = NOW()
-WHERE id = $1 AND status = 'processing'
+WHERE id = $1 AND status = 'chunking'
 RETURNING *;
 
--- name: SetChunkrResult :one
+-- name: SetChunkingResult :one
 UPDATE documents
 SET 
     chunkr_result = $2,
-    status = 'completed',
+    status = 'chunked',
     updated_at = NOW()
 WHERE id = $1
 RETURNING *;
+
+-- name: GetChunkedDocuments :many
+SELECT *
+FROM documents
+WHERE status = 'chunked'
+ORDER BY created_at ASC
+LIMIT $1;
+
+-- name: LockDocumentForIndexing :one
+UPDATE documents
+SET 
+    status = 'indexing',
+    updated_at = NOW()
+WHERE id = $1 AND status = 'chunked'
+RETURNING *;
+

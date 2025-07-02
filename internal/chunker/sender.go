@@ -1,4 +1,4 @@
-package chunkr
+package chunker
 
 import (
 	"context"
@@ -15,7 +15,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-func (p *DocumentProcessor) documentSenderBatch(ctx context.Context, logger *slog.Logger) error {
+func (p *Chunker) senderBatch(ctx context.Context, logger *slog.Logger) error {
 	docs, err := p.db.GetPendingDocuments(ctx, int32(p.cfg.BatchSize))
 	if err != nil {
 		return fmt.Errorf("get pending documents: %w", err)
@@ -23,15 +23,15 @@ func (p *DocumentProcessor) documentSenderBatch(ctx context.Context, logger *slo
 
 	for _, doc := range docs {
 		if err := p.sendDocument(ctx, doc.ID); err != nil {
-			logger.Error("failed to process document",
+			logger.Error("failed to send document to chunking",
 				"doc_id", doc.ID,
 				"error", err)
 
 			if err := p.db.UpdateDocumentStatus(ctx, sqlc.UpdateDocumentStatusParams{
 				ID:     doc.ID,
-				Status: sqlc.DocumentStatusFailed,
+				Status: sqlc.DocumentStatusChunkfail,
 			}); err != nil {
-				logger.Error("failed to mark document as failed",
+				logger.Error("failed to mark document as chunkfail",
 					"doc_id", doc.ID,
 					"error", err)
 			}
@@ -41,7 +41,7 @@ func (p *DocumentProcessor) documentSenderBatch(ctx context.Context, logger *slo
 	return nil
 }
 
-func (p *DocumentProcessor) sendDocument(ctx context.Context, docID uuid.UUID) error {
+func (p *Chunker) sendDocument(ctx context.Context, docID uuid.UUID) error {
 	tx, err := p.pool.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
 		return fmt.Errorf("begin transaction: %w", err)
@@ -50,20 +50,15 @@ func (p *DocumentProcessor) sendDocument(ctx context.Context, docID uuid.UUID) e
 
 	q := p.db.WithTx(tx)
 
-	doc, err := q.LockDocumentForProcessing(ctx, docID)
+	doc, err := q.LockDocumentForChunking(ctx, docID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			p.logger.Debug("document already processed or not found",
-				"doc_id", docID)
 			return nil
 		}
-		return fmt.Errorf("lock document: %w", err)
-	}
-	if doc.ID == uuid.Nil {
-		return fmt.Errorf("document not found or already processed")
+		return fmt.Errorf("lock document for chunking: %w", err)
 	}
 
-	p.logger.Info("processing document",
+	p.logger.Info("chunking document",
 		"doc_id", doc.ID,
 		"file_name", doc.FileName)
 
@@ -72,7 +67,7 @@ func (p *DocumentProcessor) sendDocument(ctx context.Context, docID uuid.UUID) e
 		return fmt.Errorf("create chunkr task: %w", err)
 	}
 
-	p.logger.Debug("create task", "taskId", taskID)
+	p.logger.Debug("chunkr task created", "taskId", taskID)
 
 	doc, err = q.SetChunkrTaskID(ctx, sqlc.SetChunkrTaskIDParams{
 		ID:           doc.ID,
@@ -81,30 +76,30 @@ func (p *DocumentProcessor) sendDocument(ctx context.Context, docID uuid.UUID) e
 	if err != nil {
 		if err := q.UpdateDocumentStatus(ctx, sqlc.UpdateDocumentStatusParams{
 			ID:     doc.ID,
-			Status: sqlc.DocumentStatusFailed,
+			Status: sqlc.DocumentStatusChunkfail,
 		}); err != nil {
-			return fmt.Errorf("update status: %w", err)
+			return fmt.Errorf("failed to mark document as chunkfail: %w", err)
 		}
 		return fmt.Errorf("create chunkr task: %w", err)
 	}
 
 	if err := q.UpdateDocumentStatus(ctx, sqlc.UpdateDocumentStatusParams{
 		ID:     doc.ID,
-		Status: sqlc.DocumentStatusProcessing,
+		Status: sqlc.DocumentStatusChunking,
 	}); err != nil {
-		return fmt.Errorf("update status: %w", err)
+		return fmt.Errorf("failed to mark document as chunking: %w", err)
 	}
 
 	return tx.Commit(ctx)
 }
 
-func (p *DocumentProcessor) createChunkrTask(ctx context.Context, doc sqlc.Document) (string, error) {
+func (p *Chunker) createChunkrTask(ctx context.Context, doc sqlc.Document) (string, error) {
 	b64 := base64.StdEncoding.EncodeToString(doc.FileData)
 
 	req := &chunkrai.CreateForm{
 		File:      b64,
 		FileName:  &core.Optional[string]{Value: doc.FileName},
-		ExpiresIn: &core.Optional[int]{Value: 3600},
+		ExpiresIn: &core.Optional[int]{Value: int(p.cfg.ProcessingTTL.Seconds())},
 		ErrorHandling: &core.Optional[chunkrai.ErrorHandlingStrategy]{
 			Value: chunkrai.ErrorHandlingStrategyContinue,
 		},
@@ -115,7 +110,7 @@ func (p *DocumentProcessor) createChunkrTask(ctx context.Context, doc sqlc.Docum
 		},
 	}
 
-	res, err := p.client.Task.CreateTaskRoute(ctx, req)
+	res, err := p.chunkrAIClient.Task.CreateTaskRoute(ctx, req)
 	if err != nil {
 		return "", err
 	}

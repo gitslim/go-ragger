@@ -3,10 +3,11 @@ package app
 import (
 	"encoding/gob"
 
-	"github.com/gitslim/go-ragger/internal/chunkr"
+	"github.com/gitslim/go-ragger/internal/chunker"
 	"github.com/gitslim/go-ragger/internal/config"
 	"github.com/gitslim/go-ragger/internal/db"
 	"github.com/gitslim/go-ragger/internal/logger"
+	"github.com/gitslim/go-ragger/internal/rag"
 	"github.com/gitslim/go-ragger/internal/version"
 	"github.com/gitslim/go-ragger/internal/web"
 	"github.com/google/uuid"
@@ -26,7 +27,8 @@ func CreateServerApp() fx.Option {
 		config.Module,
 		web.Module,
 		db.Module,
-		chunkr.Module,
+		chunker.Module,
+		rag.Module,
 	)
 }
 

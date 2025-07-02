@@ -1,4 +1,4 @@
-package chunkr
+package rag
 
 import (
 	"context"
@@ -10,15 +10,14 @@ import (
 	"go.uber.org/fx"
 )
 
-type DocumentProcessor struct {
+type RAGPipeline struct {
 	pool   *pgxpool.Pool
 	db     *sqlc.Queries
 	logger *slog.Logger
-	cfg    *ProcessorConfig
-	client *Client
+	cfg    *RAGConfig
 }
 
-type ProcessorConfig struct {
+type RAGConfig struct {
 	BatchSize     int
 	PollInterval  time.Duration
 	StuckTimeout  time.Duration
@@ -26,30 +25,26 @@ type ProcessorConfig struct {
 	ProcessingTTL time.Duration
 }
 
-func NewDocumentProcessor(pool *pgxpool.Pool, db *sqlc.Queries, logger *slog.Logger, cfg *ProcessorConfig, client *Client) *DocumentProcessor {
-	return &DocumentProcessor{
+func NewRAGPipeline(pool *pgxpool.Pool, db *sqlc.Queries, logger *slog.Logger, cfg *RAGConfig) *RAGPipeline {
+	return &RAGPipeline{
 		pool:   pool,
 		db:     db,
-		logger: logger.With("component", "document_processor"),
+		logger: logger.With("component", "rag_pipeline"),
 		cfg:    cfg,
-		client: client,
 	}
 }
 
-func (p *DocumentProcessor) Run(ctx context.Context) error {
+func (p *RAGPipeline) Run(ctx context.Context) error {
 	// Запускаем воркеры
 	for i := range p.cfg.WorkerCount {
 		go p.worker(ctx, i)
 	}
 
-	// Запускаем очистку зависших задач
-	go p.stuckDocumentsCleaner(ctx)
-
 	<-ctx.Done()
 	return nil
 }
 
-func (p *DocumentProcessor) worker(ctx context.Context, workerID int) {
+func (p *RAGPipeline) worker(ctx context.Context, workerID int) {
 	logger := p.logger.With("worker_id", workerID)
 	ticker := time.NewTicker(p.cfg.PollInterval)
 	defer ticker.Stop()
@@ -59,18 +54,15 @@ func (p *DocumentProcessor) worker(ctx context.Context, workerID int) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			if err := p.documentSenderBatch(ctx, logger); err != nil {
+			if err := p.documentIndexerBatch(ctx); err != nil {
 				logger.Error("failed to process sender batch", "error", err)
-			}
-			if err := p.documentCheckerBatch(ctx, logger); err != nil {
-				logger.Error("failed to process checker batch", "error", err)
 			}
 		}
 	}
 }
 
-func RunDocumentProcessor(lc fx.Lifecycle, logger *slog.Logger, pool *pgxpool.Pool, db *sqlc.Queries, client *Client) {
-	cfg := &ProcessorConfig{
+func RunRAGPipeline(lc fx.Lifecycle, logger *slog.Logger, pool *pgxpool.Pool, db *sqlc.Queries) {
+	cfg := &RAGConfig{
 		BatchSize:     10,
 		PollInterval:  5 * time.Second,
 		StuckTimeout:  60 * time.Minute,
@@ -78,13 +70,13 @@ func RunDocumentProcessor(lc fx.Lifecycle, logger *slog.Logger, pool *pgxpool.Po
 		ProcessingTTL: 30 * time.Minute,
 	}
 
-	processor := NewDocumentProcessor(pool, db, logger, cfg, client)
+	processor := NewRAGPipeline(pool, db, logger, cfg)
 
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
 			go func() {
 				if err := processor.Run(context.Background()); err != nil {
-					logger.Error("document processor failed", "error", err)
+					logger.Error("rag pipeline failed", "error", err)
 				}
 			}()
 			return nil

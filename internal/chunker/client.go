@@ -1,4 +1,4 @@
-package chunkr
+package chunker
 
 import (
 	"github.com/gitslim/chunkr-ai-sdk/sdk/go/chunkrai/client"
@@ -6,15 +6,15 @@ import (
 	"github.com/gitslim/go-ragger/internal/config"
 )
 
-type Client struct {
+type ChunkrAIClient struct {
 	client.Client
 }
 
-func NewClient(config *config.ServerConfig) *Client {
+func NewChunkrAIClient(config *config.ServerConfig) *ChunkrAIClient {
 	client := client.NewClient(
 		option.WithBaseURL(config.ChunkrURL),
 		option.WithApiKey(config.ChunkrAPIKey),
 		option.WithMaxAttempts(3))
 
-	return &Client{Client: *client}
+	return &ChunkrAIClient{Client: *client}
 }

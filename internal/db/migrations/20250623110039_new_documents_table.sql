@@ -2,10 +2,13 @@
 -- +goose StatementBegin
 CREATE TYPE document_status AS ENUM (
     'pending',
-    'processing',
+    'chunking',
     'checking',
-    'completed',
-    'failed'
+    'chunked',
+    'chunkfail',
+    'indexing',
+    'indexed',
+    'indexfail'
 );
 
 CREATE TABLE documents (
