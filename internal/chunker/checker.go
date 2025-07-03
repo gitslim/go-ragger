@@ -47,10 +47,6 @@ func (p *Chunker) checkDocument(ctx context.Context, docID uuid.UUID) error {
 		return fmt.Errorf("lock document for checking: %w", err)
 	}
 
-	p.logger.Debug("checking document",
-		"doc_id", doc.ID,
-		"file_name", doc.FileName)
-
 	res, err := p.getChunkrTask(ctx, doc)
 	if err != nil {
 		return fmt.Errorf("get chunkr result: %w", err)
@@ -66,6 +62,7 @@ func (p *Chunker) checkDocument(ctx context.Context, docID uuid.UUID) error {
 		}
 
 	case chunkrai.StatusFailed, chunkrai.StatusCancelled:
+		p.logger.Error("chunkr task failed", "TaskID", res.TaskId)
 		if err := q.UpdateDocumentStatus(ctx, sqlc.UpdateDocumentStatusParams{
 			ID:     doc.ID,
 			Status: sqlc.DocumentStatusChunkfail,
@@ -74,8 +71,8 @@ func (p *Chunker) checkDocument(ctx context.Context, docID uuid.UUID) error {
 		}
 
 	case chunkrai.StatusSucceeded:
+		p.logger.Info("chunkr task succeeded", "TaskID", res.TaskId)
 		data, err := json.Marshal(res)
-		p.logger.Debug("chunkr task succeeded", "result", data)
 		if err != nil {
 			return fmt.Errorf("failed marshal chunking result: %w", err)
 		}

@@ -58,16 +58,15 @@ func (p *Chunker) sendDocument(ctx context.Context, docID uuid.UUID) error {
 		return fmt.Errorf("lock document for chunking: %w", err)
 	}
 
-	p.logger.Info("chunking document",
-		"doc_id", doc.ID,
-		"file_name", doc.FileName)
-
 	taskID, err := p.createChunkrTask(ctx, doc)
 	if err != nil {
 		return fmt.Errorf("create chunkr task: %w", err)
 	}
 
-	p.logger.Debug("chunkr task created", "taskId", taskID)
+	p.logger.Info("chunkr task created",
+		"taskId", taskID,
+		"doc_id", doc.ID,
+		"file_name", doc.FileName)
 
 	doc, err = q.SetChunkrTaskID(ctx, sqlc.SetChunkrTaskIDParams{
 		ID:           doc.ID,

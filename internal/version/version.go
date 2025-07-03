@@ -42,7 +42,7 @@ func (s *Version) String() string {
 func RegisterVersionHooks(lc fx.Lifecycle, log *slog.Logger, version *Version) {
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
-			log.Info("Build info", "version", version.Version, "date", version.Date, "commit", version.Commit)
+			log.Info("build info", "version", version.Version, "date", version.Date, "commit", version.Commit)
 			return nil
 		},
 	})

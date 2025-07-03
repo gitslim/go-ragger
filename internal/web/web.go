@@ -42,7 +42,6 @@ func RegisterHTTPServerHooks(lc fx.Lifecycle, log *slog.Logger, cfg *config.Serv
 						}
 
 						userID, ok := session.Values[util.UserIDKey]
-						log.Debug("req", "userID", userID, "session values", session.Values)
 						if !ok {
 							next.ServeHTTP(w, r)
 							return

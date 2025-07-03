@@ -6,6 +6,8 @@ import (
 	"github.com/gitslim/go-ragger/internal/chunker"
 	"github.com/gitslim/go-ragger/internal/config"
 	"github.com/gitslim/go-ragger/internal/db"
+	"github.com/gitslim/go-ragger/internal/embedder"
+	"github.com/gitslim/go-ragger/internal/indexer"
 	"github.com/gitslim/go-ragger/internal/logger"
 	"github.com/gitslim/go-ragger/internal/rag"
 	"github.com/gitslim/go-ragger/internal/version"
@@ -28,6 +30,8 @@ func CreateServerApp() fx.Option {
 		web.Module,
 		db.Module,
 		chunker.Module,
+		embedder.ModuleOpenAIEmbedder,
+		indexer.ModuleMilvusIndexer,
 		rag.Module,
 	)
 }
