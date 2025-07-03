@@ -105,8 +105,8 @@ templ Page(r *http.Request, u *sqlc.User) {
 		@head()
 		<body class="d-flex flex-column min-vh-100">
 			@header(r, u)
-			<main class="flex-grow-1">
-				<div class="container py-4">
+			<main class="d-flex flex-grow-1">
+				<div class="container d-flex flex-column flex-grow-1 py-4">
 					{ children... }
 				</div>
 			</main>

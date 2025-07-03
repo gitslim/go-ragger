@@ -11,7 +11,7 @@ import (
 	datastar "github.com/starfederation/datastar/sdk/go"
 )
 
-func SetupRoutes(rtr chi.Router, log *slog.Logger, db *sqlc.Queries) error {
+func SetupRoutes(rtr chi.Router, logger *slog.Logger, db *sqlc.Queries) error {
 	rtr.Get("/documents", func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		u, _ := util.UserFromContext(ctx)
@@ -63,7 +63,7 @@ func SetupRoutes(rtr chi.Router, log *slog.Logger, db *sqlc.Queries) error {
 
 		docs, err := db.ListDocuments(ctx, args)
 		if err != nil {
-			log.Error("failed to list documents", "error", err)
+			logger.Error("failed to list documents", "error", err)
 		}
 
 		sse.MergeFragmentTempl(DocumentRows(docs))

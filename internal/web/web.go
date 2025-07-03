@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/cloudwego/eino/components/retriever"
 	"github.com/gitslim/go-ragger/internal/config"
 	"github.com/gitslim/go-ragger/internal/db/sqlc"
 	"github.com/gitslim/go-ragger/internal/util"
@@ -20,7 +21,7 @@ import (
 	"go.uber.org/fx"
 )
 
-func RegisterHTTPServerHooks(lc fx.Lifecycle, log *slog.Logger, cfg *config.ServerConfig, db *sqlc.Queries) {
+func RegisterHTTPServerHooks(lc fx.Lifecycle, logger *slog.Logger, cfg *config.ServerConfig, db *sqlc.Queries, retriever retriever.Retriever) {
 	var srv *http.Server
 
 	lc.Append(fx.Hook{
@@ -63,10 +64,10 @@ func RegisterHTTPServerHooks(lc fx.Lifecycle, log *slog.Logger, cfg *config.Serv
 			)
 
 			setupStaticRoute(router)
-			home.SetupRoutes(router)
-			auth.SetupAuthRoutes(router, log, db, sessionStore)
-			documents.SetupRoutes(router, log, db)
-			upload.SetupFileUpload(router, log, db)
+			home.SetupRoutes(router, logger, retriever)
+			auth.SetupAuthRoutes(router, logger, db, sessionStore)
+			documents.SetupRoutes(router, logger, db)
+			upload.SetupFileUpload(router, logger, db)
 
 			srv = &http.Server{
 				Addr:    cfg.ServerAddress,

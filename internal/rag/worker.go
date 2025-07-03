@@ -121,6 +121,9 @@ func (p *RAGPipeline) indexDocument(ctx context.Context, docID uuid.UUID) error 
 	if err != nil {
 		return fmt.Errorf("failed to store document to index: %w", err)
 	}
+	p.logger.Info("document indexed",
+		"doc_id", doc.ID,
+		"file_name", doc.FileName)
 
 	if err := q.UpdateDocumentStatus(ctx, sqlc.UpdateDocumentStatusParams{
 		ID:     doc.ID,

@@ -9,6 +9,7 @@ require (
 	github.com/cloudwego/eino v0.3.27
 	github.com/cloudwego/eino-ext/components/embedding/openai v0.0.0-20250702112024-971d2277890c
 	github.com/cloudwego/eino-ext/components/indexer/milvus v0.0.0-20250702112024-971d2277890c
+	github.com/cloudwego/eino-ext/components/retriever/milvus v0.0.0-20250703090011-132821e3f8a7
 	github.com/gitslim/chunkr-ai-sdk/sdk/go/chunkrai v0.0.0-20250701213412-1414eb51838c
 	github.com/go-chi/chi/v5 v5.2.1
 	github.com/goccy/go-json v0.10.4
@@ -85,7 +86,7 @@ require (
 	golang.org/x/sync v0.15.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect
 	golang.org/x/text v0.26.0 // indirect
-	google.golang.org/genproto v0.0.0-20220503193339-ba3ae3f07e29 // indirect
+	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
 	google.golang.org/grpc v1.73.0 // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

@@ -4,12 +4,128 @@ import "net/http"
 import "github.com/gitslim/go-ragger/internal/web/tpl"
 import "github.com/gitslim/go-ragger/internal/db/sqlc"
 
-templ PageHome(r *http.Request, u *sqlc.User) {
+templ PageHome(r *http.Request, u *sqlc.User, signals *Signals) {
 	@tpl.Page(r, u) {
-		<div class="home-page">
-			<div class="container">
-				<h2 class="h2 text-center">Домашняя страница</h2>
+		if u == nil {
+			@NonAuthorized()
+		} else {
+			@Main(signals)
+		}
+	}
+}
+
+templ NonAuthorized() {
+	<div class="home-page">
+		<div class="container">
+			<h2 class="h2 text-center">Домашняя страница</h2>
+		</div>
+	</div>
+}
+
+type ActorType int
+
+const (
+	ActorAssistant ActorType = iota
+	ActorUser
+)
+
+templ ChatMessage(typ ActorType, content string) {
+	switch typ {
+		case ActorAssistant:
+			<div class="d-flex justify-content-start mb-2">
+				<div class="p-3 bg-white rounded-3 shadow-sm" style="max-width: 80%;">
+					{ content }
+				</div>
+			</div>
+		case ActorUser:
+			<div class="d-flex justify-content-end mb-2">
+				<div class="p-3 bg-primary text-white rounded-3" style="max-width: 80%;">
+					{ content }
+				</div>
+			</div>
+	}
+}
+
+type Signals struct {
+	Question string `json:"question"`
+}
+
+templ Main(signals *Signals) {
+	<div
+		class="d-flex flex-column flex-grow-1"
+		data-signals={ templ.JSONString(signals) }
+	>
+		<div class="d-flex flex-grow-1 row g-0">
+			<!-- Основная область чата -->
+			<div class="d-flex flex-grow-1 flex-column col-md-9 border-end">
+				<!-- Шапка чата -->
+				<div class="bg-primary text-white p-3 d-flex justify-content-between align-items-center">
+					<h5 class="mb-0">ИИ-ассистент</h5>
+					<span class="badge bg-light text-dark">
+						<iconify-icon icon="mdi:circle" class="text-success" width="12"></iconify-icon> Онлайн
+					</span>
+				</div>
+				<!-- Область сообщений -->
+				<div id="chat" class="flex-grow-1 p-3 bg-light overflow-auto d-flex flex-column"></div>
+				<!-- Поле ввода -->
+				<div class="p-3 border-top">
+					<div class="input-group">
+						<input
+							id="ask"
+							data-bind-question
+							data-on-keydown="evt.key == 'Enter' && @post('/ask')"
+							type="text"
+							class="form-control"
+							placeholder="Задайте вопрос по базе знаний ..."
+						/>
+						<button
+							data-on-click="@post('/ask')"
+							data-attr-disabled="!$question"
+							class="btn btn-primary"
+							type="button"
+						>
+							<iconify-icon icon="mdi:send" width="20"></iconify-icon>
+						</button>
+					</div>
+				</div>
+			</div>
+			<!-- Колонка инструментов -->
+			<div class="col-md-3 p-3 bg-white overflow-auto">
+				<h5 class="mb-3">Настройки чата</h5>
+				<div class="mb-4">
+					<h6 class="fw-bold mb-2">Внешний вид</h6>
+					<div class="form-check form-switch mb-2">
+						<input class="form-check-input" type="checkbox" id="darkModeSwitch"/>
+						<label class="form-check-label" for="darkModeSwitch">Темная тема</label>
+					</div>
+					<div class="form-check form-switch mb-2">
+						<input class="form-check-input" type="checkbox" id="compactModeSwitch" checked/>
+						<label class="form-check-label" for="compactModeSwitch">Компактный режим</label>
+					</div>
+				</div>
+				<div class="mb-4">
+					<h6 class="fw-bold mb-2">Уведомления</h6>
+					<div class="form-check form-switch mb-2">
+						<input class="form-check-input" type="checkbox" id="soundSwitch" checked/>
+						<label class="form-check-label" for="soundSwitch">Звуковые уведомления</label>
+					</div>
+					<div class="form-check form-switch mb-2">
+						<input class="form-check-input" type="checkbox" id="desktopNotifSwitch"/>
+						<label class="form-check-label" for="desktopNotifSwitch">Desktop-уведомления</label>
+					</div>
+				</div>
+				<div class="mb-4">
+					<h6 class="fw-bold mb-2">История чата</h6>
+					<button class="btn btn-outline-secondary w-100 mb-2">
+						<iconify-icon icon="mdi:content-save" class="me-2"></iconify-icon>
+						Сохранить историю
+					</button>
+					<button class="btn btn-outline-danger w-100">
+						<iconify-icon icon="mdi:delete" class="me-2"></iconify-icon>
+						Очистить историю
+					</button>
+				</div>
 			</div>
 		</div>
-	}
+	</div>
 }
