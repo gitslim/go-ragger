@@ -3,7 +3,7 @@ package auth
 import (
 	"github.com/gitslim/go-ragger/internal/db/sqlc"
 	"github.com/gitslim/go-ragger/internal/web/tpl"
-	"github.com/starfederation/datastar/sdk/go"
+	datastar "github.com/starfederation/datastar/sdk/go"
 	"net/http"
 )
 
@@ -12,48 +12,74 @@ type LoginSignals struct {
 	Password string `json:"password"`
 }
 
+type RegisterSignals struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
 templ PageAuthenticationLogin(r *http.Request, signals *LoginSignals, u *sqlc.User) {
 	@tpl.Page(r, u) {
-		<div
-			id="login"
-			class="auth-page"
-			data-signals={ templ.JSONString(signals) }
-		>
-			<div class="container page">
-				<div class="row">
-					<div class="col-md-6 offset-md-3 col-xs-12">
-						<h1 class="text-xs-center">Войти</h1>
-						<p class="text-xs-center">
-							<a href="/auth/register">Зарегистрироваться</a>
-						</p>
-						@tpl.ErrorMessages()
-						<div>
-							<fieldset class="form-group mb-3">
-								<input
-									id="email"
-									autocomplete="email"
-									class="form-control form-control-lg"
-									type="text"
-									placeholder="Email"
-									data-bind-email
-								/>
-							</fieldset>
-							<fieldset class="form-group mb-3">
-								<input
-									id="password"
-									autocomplete="current-password"
-									class="form-control form-control-lg"
-									type="password"
-									placeholder="Password"
-									data-bind-password
-								/>
-							</fieldset>
-							<button
-								class="btn btn-lg btn-primary pull-xs-right"
-								data-on-click={ datastar.PostSSE("/auth/login") }
-							>
-								Войти
-							</button>
+		<div class="auth-wrapper d-flex align-items-center" id="login" data-signals={ templ.JSONString(signals) }>
+			<div class="container">
+				<div class="row justify-content-center">
+					<div class="col-md-8 col-lg-6 col-xl-5">
+						<div class="card shadow-sm">
+							<div class="card-body p-4 p-md-5">
+								<div class="text-center mb-4">
+									<iconify-icon icon="mdi:account-key" width="48" class="text-primary mb-3"></iconify-icon>
+									<h2 class="h3">Вход в систему</h2>
+									<p class="text-muted">
+										Нет аккаунта? <a href="/auth/register" class="text-decoration-none">Создайте его</a>
+									</p>
+								</div>
+								@tpl.ErrorMessages()
+								<form class="needs-validation" novalidate>
+									<div class="mb-3">
+										<label for="email" class="form-label">Email</label>
+										<div class="input-group">
+											<span class="input-group-text">
+												<iconify-icon icon="mdi:email"></iconify-icon>
+											</span>
+											<input
+												id="email"
+												type="email"
+												class="form-control form-control-lg"
+												placeholder="your@email.com"
+												autocomplete="email"
+												required
+												data-bind-email
+											/>
+										</div>
+									</div>
+									<div class="mb-4">
+										<label for="password" class="form-label">Пароль</label>
+										<div class="input-group">
+											<span class="input-group-text">
+												<iconify-icon icon="mdi:lock"></iconify-icon>
+											</span>
+											<input
+												id="password"
+												type="password"
+												class="form-control form-control-lg"
+												placeholder="••••••••"
+												autocomplete="current-password"
+												required
+												data-bind-password
+											/>
+										</div>
+									</div>
+									<div class="d-grid gap-2">
+										<button
+											class="btn btn-primary btn-lg"
+											type="button"
+											data-on-click={ datastar.PostSSE("/auth/login") }
+										>
+											<iconify-icon icon="mdi:login" class="me-1"></iconify-icon>
+											Войти
+										</button>
+									</div>
+								</form>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -62,51 +88,70 @@ templ PageAuthenticationLogin(r *http.Request, signals *LoginSignals, u *sqlc.Us
 	}
 }
 
-type RegisterSignals struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
 templ PageAuthenticationRegister(r *http.Request, signals *RegisterSignals, u *sqlc.User) {
 	@tpl.Page(r, u) {
-		<div
-			id="register"
-			class="auth-page"
-			data-signals={ templ.JSONString(signals) }
-		>
-			<div class="container page">
-				<div class="row">
-					<div class="col-md-6 offset-md-3 col-xs-12">
-						<h1 class="text-xs-center">Зарегистрироваться</h1>
-						<p class="text-xs-center">
-							<a href="/auth/login">Войти</a>
-						</p>
-						@tpl.ErrorMessages()
-						<div>
-							<fieldset class="form-group mb-3">
-								<input
-									id="email"
-									autocomplete="email"
-									class="form-control form-control-lg"
-									type="text"
-									placeholder="Email"
-									data-bind-email
-								/>
-							</fieldset>
-							<fieldset class="form-group mb-3">
-								<input
-									id="password"
-									autocomplete="current-password"
-									class="form-control form-control-lg"
-									type="password"
-									placeholder="Password"
-									data-bind-password
-								/>
-							</fieldset>
-							<button
-								class="btn btn-lg btn-primary pull-xs-right"
-								data-on-click={ datastar.PostSSE("/auth/register") }
-							>Зарегистрироваться</button>
+		<div class="auth-wrapper d-flex align-items-center" id="register" data-signals={ templ.JSONString(signals) }>
+			<div class="container">
+				<div class="row justify-content-center">
+					<div class="col-md-8 col-lg-6 col-xl-5">
+						<div class="card shadow-sm">
+							<div class="card-body p-4 p-md-5">
+								<div class="text-center mb-4">
+									<iconify-icon icon="mdi:account-plus" width="48" class="text-primary mb-3"></iconify-icon>
+									<h2 class="h3">Создание аккаунта</h2>
+									<p class="text-muted">
+										Уже есть аккаунт? <a href="/auth/login" class="text-decoration-none">Войдите</a>
+									</p>
+								</div>
+								@tpl.ErrorMessages()
+								<form class="needs-validation" novalidate>
+									<div class="mb-3">
+										<label for="email" class="form-label">Email</label>
+										<div class="input-group">
+											<span class="input-group-text">
+												<iconify-icon icon="mdi:email"></iconify-icon>
+											</span>
+											<input
+												id="email"
+												type="email"
+												class="form-control form-control-lg"
+												placeholder="your@email.com"
+												autocomplete="email"
+												required
+												data-bind-email
+											/>
+										</div>
+									</div>
+									<div class="mb-3">
+										<label for="password" class="form-label">Пароль</label>
+										<div class="input-group">
+											<span class="input-group-text">
+												<iconify-icon icon="mdi:lock"></iconify-icon>
+											</span>
+											<input
+												id="password"
+												type="password"
+												class="form-control form-control-lg"
+												placeholder="••••••••"
+												autocomplete="new-password"
+												required
+												data-bind-password
+											/>
+										</div>
+										<div class="form-text">Минимум 8 символов</div>
+									</div>
+									<div class="d-grid gap-2">
+										<button
+											class="btn btn-primary btn-lg"
+											type="button"
+											data-on-click={ datastar.PostSSE("/auth/register") }
+										>
+											<iconify-icon icon="mdi:account-plus" class="me-1"></iconify-icon>
+											Зарегистрироваться
+										</button>
+									</div>
+								</form>
+							</div>
 						</div>
 					</div>
 				</div>

@@ -3,7 +3,6 @@ package auth
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -18,7 +17,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func SetupAuthRoutes(r chi.Router, log *slog.Logger, db *sqlc.Queries, sessionStore sessions.Store) {
+func SetupAuthRoutes(r chi.Router, logger *slog.Logger, db *sqlc.Queries, sessionStore sessions.Store) {
 
 	r.Route("/auth", func(authRouter chi.Router) {
 		authRouter.Post("/logout", func(w http.ResponseWriter, r *http.Request) {
@@ -53,14 +52,11 @@ func SetupAuthRoutes(r chi.Router, log *slog.Logger, db *sqlc.Queries, sessionSt
 			loginRouter.Post("/", func(w http.ResponseWriter, r *http.Request) {
 				var appError error
 
-				// if err := r.ParseMultipartForm(1 << 20); err != nil {
-				// 	http.Error(w, "Failed to parse multipart form", http.StatusBadRequest)
-				// 	return
-				// }
-
 				signals := &LoginSignals{}
 				if err := datastar.ReadSignals(r, &signals); err != nil {
-					http.Error(w, fmt.Sprintf("error unmarshalling form: %s", err), http.StatusBadRequest)
+					logger.Error("error unmarshalling form", "error", err)
+					http.Error(w, "bad request", http.StatusBadRequest)
+					return
 				}
 
 				user, err := db.GetUserByEmail(r.Context(), signals.Email)
@@ -117,7 +113,8 @@ func SetupAuthRoutes(r chi.Router, log *slog.Logger, db *sqlc.Queries, sessionSt
 
 				signals := &RegisterSignals{}
 				if err := datastar.ReadSignals(r, &signals); err != nil {
-					http.Error(w, fmt.Sprintf("error unmarshalling form: %s", err), http.StatusBadRequest)
+					logger.Error("error unmarshalling signals", "error", err)
+					http.Error(w, "bad request", http.StatusBadRequest)
 				}
 
 				email := strings.TrimSpace(signals.Email)

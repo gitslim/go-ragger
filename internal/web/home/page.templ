@@ -22,32 +22,92 @@ templ NonAuthorized() {
 	</div>
 }
 
-type ActorType int
-
-const (
-	ActorAssistant ActorType = iota
-	ActorUser
-)
-
-templ ChatMessage(typ ActorType, content string) {
-	switch typ {
-		case ActorAssistant:
-			<div class="d-flex justify-content-start mb-2">
-				<div class="p-3 bg-white rounded-3 shadow-sm" style="max-width: 80%;">
-					{ content }
-				</div>
-			</div>
-		case ActorUser:
-			<div class="d-flex justify-content-end mb-2">
-				<div class="p-3 bg-primary text-white rounded-3" style="max-width: 80%;">
-					{ content }
-				</div>
-			</div>
-	}
+type Signals struct {
+	Question   string `json:"question"`
+	ShowThink  bool   `json:"showthink"`
+	Duckduckgo bool   `json:"duckduckgo"`
 }
 
-type Signals struct {
-	Question string `json:"question"`
+templ UserRequest(id string, content string) {
+	<div id={ id }>
+		<div class="d-flex justify-content-end mb-2">
+			<div class="p-2 bg-white rounded-3 shadow-sm" style="max-width: 80%;">
+				{ content }
+			</div>
+		</div>
+	</div>
+}
+
+type ResponseStage int
+
+const (
+	ResponseStarting ResponseStage = iota
+	ResponseStreaming
+	ResponseFinished
+)
+
+type Response struct {
+	Stage         ResponseStage
+	Content       string
+	ReasonContent string
+	Error         string
+}
+
+templ AssistantResponse(id string, response Response) {
+	<div id={ id } class="mb-3">
+		switch response.Stage {
+			case ResponseStarting:
+				<div class="d-flex justify-content-start mb-2">
+					<span class="badge bg-light text-dark p-2">
+						<iconify-icon icon="svg-spinners:3-dots-fade" class="text-info"></iconify-icon>
+						{ response.Content }
+					</span>
+				</div>
+			case ResponseStreaming:
+				if response.ReasonContent != "" {
+					<details class="mb-2" data-attr-open="$showthink == true">
+						<summary class="btn btn-sm btn-outline-secondary text-muted">
+							<span data-text="$showthink ? 'Скрыть рассуждения' : 'Показать рассуждения'"></span>
+						</summary>
+						<div class="markdown p-2 bg-light bg-opacity-50 rounded mt-1 text-muted">
+							@templ.Raw(response.ReasonContent)
+						</div>
+					</details>
+				}
+				<div class="markdown p-2">
+					@templ.Raw(response.Content)
+				</div>
+			case ResponseFinished:
+				if response.ReasonContent != "" {
+					<details class="mb-2" data-attr-open="$showthink == true">
+						<summary class="btn btn-sm btn-outline-secondary text-muted">
+							<span data-text="$showthink ? 'Скрыть рассуждения' : 'Показать рассуждения'"></span>
+						</summary>
+						<div class="markdown p-2 bg-light bg-opacity-50 rounded mt-1 text-muted">
+							@templ.Raw(response.ReasonContent)
+						</div>
+					</details>
+				}
+				<div class="markdown p-2 mb-2">
+					@templ.Raw(response.Content)
+				</div>
+				if response.Error != "" {
+					<div class="d-flex justify-content-end mb-2">
+						<span class="p-2 bg-white rounded-3 shadow-sm alert alert-danger" style="max-width: 80%;">
+							{ response.Error }
+						</span>
+					</div>
+				}
+				<div class="d-flex justify-content-end gap-2">
+					<button class="btn btn-sm btn-outline-primary" title="Скопировать">
+						<iconify-icon icon="mdi:content-copy" width="14"></iconify-icon>
+					</button>
+					<button class="btn btn-sm btn-outline-success" title="Перегенерировать">
+						<iconify-icon icon="mdi:autorenew" width="14"></iconify-icon>
+					</button>
+				</div>
+		}
+	</div>
 }
 
 templ Main(signals *Signals) {
@@ -57,7 +117,7 @@ templ Main(signals *Signals) {
 	>
 		<div class="d-flex flex-grow-1 row g-0">
 			<!-- Основная область чата -->
-			<div class="d-flex flex-grow-1 flex-column col-md-9 border-end">
+			<div class="d-flex flex-grow-1 flex-column col-md-9">
 				<!-- Шапка чата -->
 				<div class="bg-primary text-white p-3 d-flex justify-content-between align-items-center">
 					<h5 class="mb-0">ИИ-ассистент</h5>
@@ -66,9 +126,9 @@ templ Main(signals *Signals) {
 					</span>
 				</div>
 				<!-- Область сообщений -->
-				<div id="chat" class="flex-grow-1 p-3 bg-light overflow-auto d-flex flex-column"></div>
+				<div id="chat" class="flex-grow-1 p-3 bg-light overflow-auto d-flex flex-column border"></div>
 				<!-- Поле ввода -->
-				<div class="p-3 border-top">
+				<div class="py-3 border-top">
 					<div class="input-group">
 						<input
 							id="ask"
@@ -76,7 +136,7 @@ templ Main(signals *Signals) {
 							data-on-keydown="evt.key == 'Enter' && @post('/ask')"
 							type="text"
 							class="form-control"
-							placeholder="Задайте вопрос по базе знаний ..."
+							placeholder="Задайте вопрос базе знаний ..."
 						/>
 						<button
 							data-on-click="@post('/ask')"
@@ -91,38 +151,25 @@ templ Main(signals *Signals) {
 			</div>
 			<!-- Колонка инструментов -->
 			<div class="col-md-3 p-3 bg-white overflow-auto">
-				<h5 class="mb-3">Настройки чата</h5>
 				<div class="mb-4">
-					<h6 class="fw-bold mb-2">Внешний вид</h6>
+					<h6 class="fw-bold mb-2">Настройки чата</h6>
 					<div class="form-check form-switch mb-2">
-						<input class="form-check-input" type="checkbox" id="darkModeSwitch"/>
-						<label class="form-check-label" for="darkModeSwitch">Темная тема</label>
-					</div>
-					<div class="form-check form-switch mb-2">
-						<input class="form-check-input" type="checkbox" id="compactModeSwitch" checked/>
-						<label class="form-check-label" for="compactModeSwitch">Компактный режим</label>
+						<input class="form-check-input" type="checkbox" id="showThinkSwitch" data-bind-showThink/>
+						<label class="form-check-label" for="showThinkSwitch">Показывать рассуждения</label>
 					</div>
 				</div>
 				<div class="mb-4">
-					<h6 class="fw-bold mb-2">Уведомления</h6>
-					<div class="form-check form-switch mb-2">
-						<input class="form-check-input" type="checkbox" id="soundSwitch" checked/>
-						<label class="form-check-label" for="soundSwitch">Звуковые уведомления</label>
-					</div>
-					<div class="form-check form-switch mb-2">
-						<input class="form-check-input" type="checkbox" id="desktopNotifSwitch"/>
-						<label class="form-check-label" for="desktopNotifSwitch">Desktop-уведомления</label>
+					<h6 class="fw-bold mb-2" title="Использовать дополнительные инструменты">Инструменты</h6>
+					<div class="form-check form-switch mb-2" title="Веб-поиск в Duckduckgo">
+						<input class="form-check-input" type="checkbox" id="duckduckgoSwitch" data-bind-duckduckgo/>
+						<label class="form-check-label" for="duckduckgoSwitch">Duckduckgo</label>
 					</div>
 				</div>
 				<div class="mb-4">
-					<h6 class="fw-bold mb-2">История чата</h6>
-					<button class="btn btn-outline-secondary w-100 mb-2">
-						<iconify-icon icon="mdi:content-save" class="me-2"></iconify-icon>
-						Сохранить историю
-					</button>
-					<button class="btn btn-outline-danger w-100">
-						<iconify-icon icon="mdi:delete" class="me-2"></iconify-icon>
-						Очистить историю
+					<h6 class="fw-bold mb-2">Действия</h6>
+					<button class="btn btn-outline-secondary w-100 mb-2" title="Экспорт чата в заданном формате" disabled>
+						<iconify-icon icon="mdi:content-export" class="me-2"></iconify-icon>
+						Экспорт чата
 					</button>
 				</div>
 			</div>

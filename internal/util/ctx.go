@@ -8,7 +8,7 @@ import (
 
 func UserFromContext(ctx context.Context) (*sqlc.User, bool) {
 	user, ok := ctx.Value(UserKey).(*sqlc.User)
-	return user, ok
+	return user, ok // TODO: refactor return?
 }
 
 func ContextWithUser(ctx context.Context, user *sqlc.User) context.Context {
@@ -18,4 +18,9 @@ func ContextWithUser(ctx context.Context, user *sqlc.User) context.Context {
 func IsAuthenticated(ctx context.Context) bool {
 	_, ok := UserFromContext(ctx)
 	return ok
+}
+
+func RequestIDFromContext(ctx context.Context) (string, bool) {
+	reqID, ok := ctx.Value(RequestIDKey).(string)
+	return reqID, ok
 }

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/cloudwego/eino/components/retriever"
+	"github.com/gitslim/go-ragger/internal/agent"
 	"github.com/gitslim/go-ragger/internal/config"
 	"github.com/gitslim/go-ragger/internal/db/sqlc"
 	"github.com/gitslim/go-ragger/internal/util"
@@ -16,12 +17,11 @@ import (
 	"github.com/gitslim/go-ragger/internal/web/upload"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/google/uuid"
 	"github.com/gorilla/sessions"
 	"go.uber.org/fx"
 )
 
-func RegisterHTTPServerHooks(lc fx.Lifecycle, logger *slog.Logger, cfg *config.ServerConfig, db *sqlc.Queries, retriever retriever.Retriever) {
+func RegisterHTTPServerHooks(lc fx.Lifecycle, logger *slog.Logger, cfg *config.ServerConfig, db *sqlc.Queries, retriever retriever.Retriever, agentFactory agent.RagAgentFactory) {
 	var srv *http.Server
 
 	lc.Append(fx.Hook{
@@ -34,37 +34,12 @@ func RegisterHTTPServerHooks(lc fx.Lifecycle, logger *slog.Logger, cfg *config.S
 			router.Use(
 				middleware.Logger,
 				middleware.Recoverer,
-				func(next http.Handler) http.Handler {
-					return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-						session, err := sessionStore.Get(r, util.SessionKey)
-						if err != nil {
-							http.Error(w, "failed to get session", http.StatusInternalServerError)
-							return
-						}
-
-						userID, ok := session.Values[util.UserIDKey]
-						if !ok {
-							next.ServeHTTP(w, r)
-							return
-						}
-
-						user, err := db.GetUserById(r.Context(), userID.(uuid.UUID))
-						if err != nil {
-							// Сбрасываем userID если не найден в бд
-							delete(session.Values, util.UserIDKey)
-							session.Save(r, w)
-							http.Redirect(w, r, "/auth/login", http.StatusTemporaryRedirect)
-							return
-
-						}
-						ctx := util.ContextWithUser(r.Context(), &user)
-						next.ServeHTTP(w, r.WithContext(ctx))
-					})
-				},
+				currentUserMiddleware(sessionStore, db),
+				requestIDMiddleware(),
 			)
 
 			setupStaticRoute(router)
-			home.SetupRoutes(router, logger, retriever)
+			home.SetupRoutes(router, logger, retriever, agentFactory)
 			auth.SetupAuthRoutes(router, logger, db, sessionStore)
 			documents.SetupRoutes(router, logger, db)
 			upload.SetupFileUpload(router, logger, db)
@@ -75,6 +50,7 @@ func RegisterHTTPServerHooks(lc fx.Lifecycle, logger *slog.Logger, cfg *config.S
 			}
 
 			go func() {
+				logger.Debug("starting web server", "config", cfg)
 				srv.ListenAndServe()
 			}()
 			return nil

@@ -24,13 +24,8 @@ INSERT INTO documents (
 ON CONFLICT (user_id, file_hash) DO NOTHING
 RETURNING *;
 
--- name: GetDocumentBase64 :one
-SELECT 
-    id,
-    file_name,
-    mime_type,
-    encode(file_data, 'base64') AS file_data_base64,
-    status
+-- name: GetUserDocumentById :one
+SELECT *
 FROM documents
 WHERE id = $1 AND user_id = $2;
 

@@ -35,6 +35,19 @@ func NewMilvusRetriever(cli *client.Client, emb embedding.Embedder) (*milvus.Ret
 		return nil, fmt.Errorf("failed to create milvus retriever: %w", err)
 	}
 
+	// Retrieve documents example
+	// _, err := retriever.Retrieve(ctx, "search query")
+	// if err != nil {
+	// 	fmt.Printf("Failed to retrieve milvus documents: %v", err)
+	// }
+
+	// for i, doc := range documents {
+	// 	fmt.Printf("Document %d:\n", i)
+	// 	fmt.Printf("title: %s\n", doc.ID)
+	// 	fmt.Printf("content: %s\n", doc.Content)
+	// 	fmt.Printf("metadata: %v\n", doc.MetaData)
+	// }
+
 	return retriever, nil
 }
 

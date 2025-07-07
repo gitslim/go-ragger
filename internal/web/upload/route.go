@@ -37,16 +37,16 @@ func SetupFileUpload(rtr chi.Router, log *slog.Logger, db *sqlc.Queries) error {
 		ctx := r.Context()
 		u, _ := util.UserFromContext(ctx)
 		if u == nil {
-			http.Error(w, "Forbidden", http.StatusForbidden)
+			http.Error(w, "forbidden", http.StatusForbidden)
 			return
 		}
 
-		maxBytesSize := 100 * 1024 * 1024
+		maxBytesSize := 50 * 1024 * 1024
 		r.Body = http.MaxBytesReader(w, r.Body, int64(maxBytesSize))
 		data, err := io.ReadAll(r.Body)
 		if err != nil {
 			if len(data) >= maxBytesSize {
-				http.Error(w, "file too large", http.StatusRequestEntityTooLarge)
+				http.Error(w, "upload data is too large", http.StatusRequestEntityTooLarge)
 				return
 			}
 

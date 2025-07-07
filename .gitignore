@@ -41,6 +41,7 @@ internal/chunkr/api/
 
 build/
 tmp/
+data/
 golangci-lint/
 cover.out
 cover.html

@@ -5,6 +5,7 @@ import (
 	"github.com/gitslim/go-ragger/internal/web/tpl"
 	datastar "github.com/starfederation/datastar/sdk/go"
 	"net/http"
+	"strings"
 )
 
 type FileUploadSignals struct {
@@ -14,60 +15,117 @@ type FileUploadSignals struct {
 }
 
 templ FileUploadView(signals *FileUploadSignals) {
-	<div
-		id="file_upload"
-		data-signals={ templ.JSONString(signals) }
-	>
-		<a class="btn btn-link" href="/documents">К списку документов</a>
-		<div class="mb-3 py-4">
-			<input
-				id="file_input"
-				type="file"
-				data-bind-files
-				multiple
-				class="form-control"
-				accept="application/pdf,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.docx,application/msword,.doc,application/vnd.openxmlformats-officedocument.presentationml.presentation,.pptx,application/vnd.ms-powerpoint,.ppt,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.xlsx,application/vnd.ms-excel,.xls,image/jpeg,.jpg,.jpeg,image/png,.png"
-			/>
+	<div class="container py-4" id="file_upload" data-signals={ templ.JSONString(signals) }>
+		<div class="d-flex justify-content-between align-items-center mb-4">
+			<h2 class="mb-0">
+				<iconify-icon icon="mdi:cloud-upload" class="me-2"></iconify-icon>
+				Загрузка документов
+			</h2>
+			<a href="/documents" class="btn btn-outline-secondary">
+				<iconify-icon icon="mdi:arrow-left" class="me-1"></iconify-icon>
+				К списку документов
+			</a>
 		</div>
-		<button
-			class="btn btn-primary"
-			data-on-click={ datastar.PostSSE("/upload/upload") }
-			data-show="!!$files?.length"
-		>
-			Загрузить
-		</button>
+		<div class="card shadow-sm">
+			<div class="card-body">
+				<div class="mb-4">
+					<label for="file_input" class="form-label">
+						<iconify-icon icon="mdi:file-upload" class="me-1"></iconify-icon>
+						Выберите файлы для загрузки (общий вес не более 50мб)
+					</label>
+					<div class="file-upload-wrapper border rounded p-4 text-center">
+						<input
+							id="file_input"
+							type="file"
+							data-bind-files
+							multiple
+							class="form-control d-none"
+							accept="application/pdf,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.docx,application/msword,.doc,application/vnd.openxmlformats-officedocument.presentationml.presentation,.pptx,application/vnd.ms-powerpoint,.ppt,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.xlsx,application/vnd.ms-excel,.xls,image/jpeg,.jpg,.jpeg,image/png,.png"
+						/>
+						<label for="file_input" class="btn btn-light mb-3">
+							<iconify-icon icon="mdi:folder-open" class="me-1"></iconify-icon>
+							Выбрать файлы
+						</label>
+						<p class="text-muted small mb-0">
+							Поддерживаемые форматы: PDF, DOCX, XLSX, PPTX, JPG, PNG
+						</p>
+					</div>
+				</div>
+				<button
+					class="btn btn-primary w-100 py-2"
+					data-on-click={ datastar.PostSSE("/upload/upload") }
+					data-show="!!$files?.length"
+				>
+					<iconify-icon icon="mdi:upload" class="me-1"></iconify-icon>
+					Загрузить выбранные файлы
+				</button>
+			</div>
+		</div>
 	</div>
 }
 
 templ FileUpdateAlert(err error) {
-	<div id="file_upload" class="alert alert-error">
-		@tpl.Icon("material-symbols:error-icon")
-		Error: { err.Error() }
+	<div class="container py-4">
+		<div class="alert alert-danger d-flex align-items-center">
+			<iconify-icon icon="mdi:alert-circle" width="24" class="me-2"></iconify-icon>
+			<div>
+				<h5 class="alert-heading mb-1">Ошибка загрузки</h5>
+				<p class="mb-0">{ err.Error() }</p>
+			</div>
+		</div>
+		<a href="/upload" class="btn btn-outline-primary">
+			<iconify-icon icon="mdi:reload" class="me-1"></iconify-icon>
+			Попробовать снова
+		</a>
 	</div>
 }
 
 templ FileUploadResults(signals *FileUploadSignals) {
-	<div id="file_upload">
-		<div class="alert alert-info" role="alert">
-			Документы загружены!
+	<div class="container py-4" id="file_upload">
+		<div class="alert alert-success d-flex align-items-center">
+			<iconify-icon icon="mdi:check-circle" width="24" class="me-2"></iconify-icon>
+			<div>
+				<h5 class="alert-heading mb-1">Загрузка завершена успешно!</h5>
+				<p class="mb-0">Файлы были успешно загружены на сервер.</p>
+			</div>
 		</div>
-		<a class="btn btn-link" href="/documents">К списку документов</a>
-		<table class="table">
-			<thead>
-				<tr>
-					<th>Имя</th>
-					<th>Mimes</th>
-				</tr>
-			</thead>
-			<tbody>
-				for i := range signals.FileNames[0] {
-					<tr>
-						<td class="text-center">{ signals.FileNames[0][i] }</td>
-						<td class="text-center">{ signals.FileMimes[0][i] }</td>
-					</tr>
-				}
-			</tbody>
-		</table>
+		<div class="card shadow-sm mt-3">
+			<div class="card-header bg-light">
+				<h5 class="mb-0">
+					<iconify-icon icon="mdi:file-document-multiple" class="me-2"></iconify-icon>
+					Загруженные файлы
+				</h5>
+			</div>
+			<div class="card-body p-0">
+				<div class="table-responsive">
+					<table class="table table-hover mb-0">
+						<thead class="table-light">
+							<tr>
+								<th class="ps-4"><iconify-icon icon="mdi:file-document" class="me-1"></iconify-icon> Имя файла</th>
+								<th><iconify-icon icon="mdi:file-code" class="me-1"></iconify-icon> Тип файла</th>
+							</tr>
+						</thead>
+						<tbody>
+							for i := range signals.FileNames[0] {
+								<tr>
+									<td class="ps-4">
+										<iconify-icon icon={ getFileIcon(signals.FileMimes[0][i]) } class="me-2"></iconify-icon>
+										{ signals.FileNames[0][i] }
+									</td>
+									<td>{ signals.FileMimes[0][i] }</td>
+								</tr>
+							}
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+		<div class="d-flex justify-content-end mt-4">
+			<a href="/documents" class="btn btn-primary">
+				<iconify-icon icon="mdi:file-document-multiple" class="me-1"></iconify-icon>
+				К списку документов
+			</a>
+		</div>
 	</div>
 }
 
@@ -75,9 +133,113 @@ templ PageFileUpload(r *http.Request, u *sqlc.User) {
 	@tpl.Page(r, u) {
 		<div
 			id="file_upload"
-			class="container"
+			class="container py-4"
 			data-on-load="@get('/upload/data')"
 			data-signals="{files: [], filesMimes: [], filesNames: []}"
 		></div>
 	}
 }
+
+// Вспомогательная функция для иконок файлов
+func getFileIcon(mimeType string) string {
+	switch {
+	case strings.HasPrefix(mimeType, "image/"):
+		return "mdi:file-image"
+	case strings.HasPrefix(mimeType, "application/pdf"):
+		return "mdi:file-pdf"
+	case strings.HasPrefix(mimeType, "text/"):
+		return "mdi:file-document"
+	case strings.HasPrefix(mimeType, "application/vnd.openxmlformats-officedocument.wordprocessingml.document"):
+		return "mdi:file-word"
+	case strings.HasPrefix(mimeType, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"):
+		return "mdi:file-excel"
+	case strings.HasPrefix(mimeType, "application/vnd.openxmlformats-officedocument.presentationml.presentation"):
+		return "mdi:file-powerpoint"
+	default:
+		return "mdi:file"
+	}
+}
+
+// package upload
+
+// import (
+// 	"github.com/gitslim/go-ragger/internal/db/sqlc"
+// 	"github.com/gitslim/go-ragger/internal/web/tpl"
+// 	datastar "github.com/starfederation/datastar/sdk/go"
+// 	"net/http"
+// )
+
+// type FileUploadSignals struct {
+// 	FilesBase64 [][]string `json:"files"`
+// 	FileMimes   [][]string `json:"filesMimes"`
+// 	FileNames   [][]string `json:"filesNames"`
+// }
+
+// templ FileUploadView(signals *FileUploadSignals) {
+// 	<div
+// 		id="file_upload"
+// 		data-signals={ templ.JSONString(signals) }
+// 	>
+// 		<a class="btn btn-link" href="/documents">К списку документов</a>
+// 		<div class="mb-3 py-4">
+// 			<input
+// 				id="file_input"
+// 				type="file"
+// 				data-bind-files
+// 				multiple
+// 				class="form-control"
+// 				accept="application/pdf,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,.docx,application/msword,.doc,application/vnd.openxmlformats-officedocument.presentationml.presentation,.pptx,application/vnd.ms-powerpoint,.ppt,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.xlsx,application/vnd.ms-excel,.xls,image/jpeg,.jpg,.jpeg,image/png,.png"
+// 			/>
+// 		</div>
+// 		<button
+// 			class="btn btn-primary"
+// 			data-on-click={ datastar.PostSSE("/upload/upload") }
+// 			data-show="!!$files?.length"
+// 		>
+// 			Загрузить
+// 		</button>
+// 	</div>
+// }
+
+// templ FileUpdateAlert(err error) {
+// 	<div id="file_upload" class="alert alert-error">
+// 		@tpl.Icon("material-symbols:error-icon")
+// 		Error: { err.Error() }
+// 	</div>
+// }
+
+// templ FileUploadResults(signals *FileUploadSignals) {
+// 	<div id="file_upload">
+// 		<div class="alert alert-info" role="alert">
+// 			Документы загружены!
+// 		</div>
+// 		<a class="btn btn-link" href="/documents">К списку документов</a>
+// 		<table class="table">
+// 			<thead>
+// 				<tr>
+// 					<th>Имя</th>
+// 					<th>Mimes</th>
+// 				</tr>
+// 			</thead>
+// 			<tbody>
+// 				for i := range signals.FileNames[0] {
+// 					<tr>
+// 						<td class="text-center">{ signals.FileNames[0][i] }</td>
+// 						<td class="text-center">{ signals.FileMimes[0][i] }</td>
+// 					</tr>
+// 				}
+// 			</tbody>
+// 		</table>
+// 	</div>
+// }
+
+// templ PageFileUpload(r *http.Request, u *sqlc.User) {
+// 	@tpl.Page(r, u) {
+// 		<div
+// 			id="file_upload"
+// 			class="container"
+// 			data-on-load="@get('/upload/data')"
+// 			data-signals="{files: [], filesMimes: [], filesNames: []}"
+// 		></div>
+// 	}
+// }

@@ -1,7 +1,8 @@
 package util
 
 const (
-	SessionKey = "ragger"
-	UserIDKey  = "userID"
-	UserKey    = "user"
+	SessionKey   = "ragger"
+	UserIDKey    = "userID"
+	UserKey      = "user"
+	RequestIDKey = "requestID"
 )
