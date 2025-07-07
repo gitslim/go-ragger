@@ -2,8 +2,10 @@ package config
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/caarlos0/env/v6"
+	"github.com/joho/godotenv"
 	"github.com/spf13/pflag"
 )
 
@@ -23,6 +25,10 @@ type ServerConfig struct {
 }
 
 func NewServerConfig() (*ServerConfig, error) {
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found, using environment variables")
+	}
+
 	var cfg ServerConfig
 	if err := env.Parse(&cfg); err != nil {
 		return nil, fmt.Errorf("env.Parse: %w", err)

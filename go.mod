@@ -110,6 +110,7 @@ require (
 	github.com/cloudwego/eino-ext/components/model/qwen v0.0.0-20250707040601-2fab92740585
 	github.com/cloudwego/eino-ext/components/retriever/milvus v0.0.0-20250707040601-2fab92740585
 	github.com/cloudwego/eino-ext/components/tool/duckduckgo/v2 v2.0.0-20250707031732-1bfb5847488c
+	github.com/joho/godotenv v1.5.1
 )
 
 require (
