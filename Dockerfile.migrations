@@ -8,11 +8,11 @@ RUN --mount=type=cache,target=/go/pkg/mod \
 # ============ Stage 2: Migration Runner ============
 FROM alpine:3.19
 
-COPY --from=tools /go/bin/goose /usr/local/bin
+COPY --from=tools /go/bin/goose /usr/bin
 
 RUN mkdir -p /migrations
 
 COPY ./internal/db/migrations/ /migrations/
 
-ENTRYPOINT ["/usr/local/bin/goose"]
-CMD ["-dir", "/migrations", "postgres", "$DSN", "up"]
+ENTRYPOINT ["sh", "-c"]
+CMD ["goose -dir /migrations postgres \"$DSN\" up"]
