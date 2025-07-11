@@ -14,7 +14,5 @@ RUN mkdir -p /migrations
 
 COPY ./internal/db/migrations/ /migrations/
 
-RUN ls -la /migrations
-
-ENTRYPOINT ["goose"]
+ENTRYPOINT ["/usr/local/bin/goose"]
 CMD ["-dir", "/migrations", "postgres", "$DSN", "up"]
