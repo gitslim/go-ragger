@@ -3,7 +3,7 @@ FROM golang:1.24 AS tools
 
 RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
-    go install github.com/pressly/goose/v3/cmd/goose@v3.24.3
+     CGO_ENABLED=0 go install github.com/pressly/goose/v3/cmd/goose@v3.24.3
 
 # ============ Stage 2: Migration Runner ============
 FROM alpine:3.19
