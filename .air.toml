@@ -3,9 +3,9 @@ tmp_dir = "tmp"
 
 [build]
   bin = "./tmp/server"
-  cmd = "templ generate && go build -o ./tmp/server ."
+  cmd = "task templ:generate && go build -o ./tmp/server ./cmd/server/main.go"
   delay = 1000
-  exclude_dir = ["static", "tmp", "vendor", "deployments"]
+  exclude_dir = ["static", "tmp", "vendor", "services", "data", "workflows", "build"]
   exclude_file = []
   exclude_regex = [".*_templ.go"]
   exclude_unchanged = false
@@ -34,4 +34,4 @@ tmp_dir = "tmp"
 [proxy]
   enabled = true
   proxy_port = 8383
-  app_port = 8080
+  app_port = 8888

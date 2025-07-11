@@ -3,13 +3,14 @@ package home
 import "net/http"
 import "github.com/gitslim/go-ragger/internal/web/tpl"
 import "github.com/gitslim/go-ragger/internal/db/sqlc"
+import "github.com/gitslim/go-ragger/internal/config"
 
-templ PageHome(r *http.Request, u *sqlc.User, signals *Signals) {
+templ PageHome(r *http.Request, u *sqlc.User, signals *Signals, config *config.ServerConfig) {
 	@tpl.Page(r, u) {
 		if u == nil {
 			@NonAuthorized()
 		} else {
-			@Main(signals)
+			@Main(signals, config)
 		}
 	}
 }
@@ -110,7 +111,7 @@ templ AssistantResponse(id string, response Response) {
 	</div>
 }
 
-templ Main(signals *Signals) {
+templ Main(signals *Signals, config *config.ServerConfig) {
 	<div
 		class="d-flex flex-column flex-grow-1"
 		data-signals={ templ.JSONString(signals) }
@@ -151,6 +152,17 @@ templ Main(signals *Signals) {
 			</div>
 			<!-- Колонка инструментов -->
 			<div class="col-md-3 p-3 bg-white overflow-auto">
+				<div class="mb-4">
+					<h6 class="fw-bold mb-2">Модели</h6>
+					<div class="">
+						<dt class="col-sm-3">Chat:</dt>
+						<dd class="col-sm-9">{ config.ChatModel }</dd>
+					</div>
+					<div class="">
+						<dt class="col-sm-3">Embedding:</dt>
+						<dd class="col-sm-9">{ config.EmbeddingModel }</dd>
+					</div>
+				</div>
 				<div class="mb-4">
 					<h6 class="fw-bold mb-2">Настройки чата</h6>
 					<div class="form-check form-switch mb-2">

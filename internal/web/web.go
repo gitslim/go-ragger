@@ -6,11 +6,11 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/cloudwego/eino/components/retriever"
 	"github.com/gitslim/go-ragger/internal/agent"
 	"github.com/gitslim/go-ragger/internal/config"
 	"github.com/gitslim/go-ragger/internal/db/sqlc"
 	"github.com/gitslim/go-ragger/internal/util"
+	"github.com/gitslim/go-ragger/internal/vectordb/milvus"
 	"github.com/gitslim/go-ragger/internal/web/auth"
 	"github.com/gitslim/go-ragger/internal/web/documents"
 	"github.com/gitslim/go-ragger/internal/web/home"
@@ -21,7 +21,7 @@ import (
 	"go.uber.org/fx"
 )
 
-func RegisterHTTPServerHooks(lc fx.Lifecycle, logger *slog.Logger, cfg *config.ServerConfig, db *sqlc.Queries, retriever retriever.Retriever, agentFactory agent.RagAgentFactory) {
+func RegisterHTTPServerHooks(lc fx.Lifecycle, logger *slog.Logger, config *config.ServerConfig, db *sqlc.Queries, retrieverFactory milvus.MilvusRetrieverFactory, agentFactory agent.RagAgentFactory) {
 	var srv *http.Server
 
 	lc.Append(fx.Hook{
@@ -39,18 +39,18 @@ func RegisterHTTPServerHooks(lc fx.Lifecycle, logger *slog.Logger, cfg *config.S
 			)
 
 			setupStaticRoute(router)
-			home.SetupRoutes(router, logger, retriever, agentFactory)
+			home.SetupRoutes(router, logger, config, retrieverFactory, agentFactory)
 			auth.SetupAuthRoutes(router, logger, db, sessionStore)
 			documents.SetupRoutes(router, logger, db)
 			upload.SetupFileUpload(router, logger, db)
 
 			srv = &http.Server{
-				Addr:    cfg.ServerAddress,
+				Addr:    config.ServerAddress,
 				Handler: router,
 			}
 
 			go func() {
-				logger.Debug("starting web server", "config", cfg)
+				logger.Debug("starting web server", "config", config)
 				srv.ListenAndServe()
 			}()
 			return nil

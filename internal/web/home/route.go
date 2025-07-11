@@ -8,14 +8,14 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/a-h/templ"
-	"github.com/cloudwego/eino/components/retriever"
 	"github.com/cloudwego/eino/schema"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/gitslim/go-ragger/internal/agent"
+	"github.com/gitslim/go-ragger/internal/config"
 	"github.com/gitslim/go-ragger/internal/util"
+	"github.com/gitslim/go-ragger/internal/vectordb/milvus"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/yuin/goldmark"
@@ -31,7 +31,7 @@ var md = goldmark.New(
 	),
 )
 
-func SetupRoutes(rtr chi.Router, logger *slog.Logger, retriever retriever.Retriever, agentFacrory agent.RagAgentFactory) {
+func SetupRoutes(rtr chi.Router, logger *slog.Logger, config *config.ServerConfig, retrieverFactory milvus.MilvusRetrieverFactory, agentFacrory agent.RagAgentFactory) {
 
 	rtr.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
@@ -39,7 +39,7 @@ func SetupRoutes(rtr chi.Router, logger *slog.Logger, retriever retriever.Retrie
 
 		s := &Signals{Question: "", ShowThink: true, Duckduckgo: false}
 
-		PageHome(r, user, s).Render(ctx, w)
+		PageHome(r, user, s, config).Render(ctx, w)
 	})
 
 	rtr.Post("/ask", func(w http.ResponseWriter, r *http.Request) {
@@ -81,14 +81,10 @@ func SetupRoutes(rtr chi.Router, logger *slog.Logger, retriever retriever.Retrie
 				Content: "Обработка запроса...",
 			}))
 
-		// sse.Context().Done()
-		// sse = datastar.NewSSE(w, r)
-
-		time.Sleep(3 * time.Second)
 		// create agent for current user with config
-		agent, err := agentFacrory(&agent.RagAgentConfig{
+		agent, err := agentFacrory(ctx, &agent.RagAgentConfig{
 			UserID:         user.ID.String(),
-			MaxSteps:       10,
+			MaxSteps:       25,
 			ToolDuckduckgo: signals.Duckduckgo})
 		if err != nil {
 			logger.Error("failed to create agent with factory", "error", err)
@@ -101,6 +97,7 @@ func SetupRoutes(rtr chi.Router, logger *slog.Logger, retriever retriever.Retrie
 			logger.Error("failed to run rag agent", "error", err)
 			appendElement(sse, "chat", AssistantResponse(
 				answerID,
+
 				Response{
 					Stage: ResponseFinished,
 					Error: "Сбой системы! Повторите попытку!"}))

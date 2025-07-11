@@ -16,7 +16,7 @@ var ModuleOpenAIEmbedder = fx.Module("openai-embedder",
 			fx.As(new(embedding.Embedder)),
 		),
 	),
-	fx.Invoke(CheckEmbedder),
+	// fx.Invoke(CheckEmbedder),
 )
 
 func CheckEmbedder(lc fx.Lifecycle, logger *slog.Logger, emb embedding.Embedder) {

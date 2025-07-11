@@ -42,8 +42,7 @@ templ PageDocumentList(r *http.Request, u *sqlc.User, signals *ListSignals) {
 							</thead>
 							<tbody
 								id="documents_rows"
-								data-on-load="@get('/documents/load')"
-								data-on-interval__duration.5s="@get('/documents/load')"
+								data-on-load__delay.3s="@get('/documents/load')"
 							></tbody>
 						</table>
 					</div>

@@ -10,15 +10,15 @@ import (
 )
 
 type ServerConfig struct {
-	ServerAddress  string `env:"SERVER_ADDRESS" envDefault:"localhost:8080"`
+	ServerAddress  string `env:"SERVER_ADDRESS" envDefault:"localhost:8888"`
 	DSN            string `env:"DSN" envDefault:"postgres://postgres:postgres@localhost:5432/ragger?sslmode=disable"`
 	Debug          bool   `env:"DEBUG" envDefault:"false"`
-	ChunkrURL      string `env:"CHUNKR_URL" envDefault:"localhost:8888"`
+	ChunkrURL      string `env:"CHUNKR_URL" envDefault:"https://api.chunkr.ai"`
 	ChunkrAPIKey   string `env:"CHUNKR_API_KEY" envDefault:""`
 	OpenAIBaseURL  string `env:"OPENAI_BASE_URL" envDefault:"http://localhost:11434/v1"`
 	OpenAIAPIKey   string `env:"OPENAI_API_KEY" envDefault:"dummy-key"`
 	EmbeddingModel string `env:"EMBEDDING_MODEL" envDefault:"myaniu/qwen3-embedding:0.6b"`
-	ChatModel      string `env:"CHAT_MODEL" envDefault:"deepseek-r1:8b"`
+	ChatModel      string `env:"CHAT_MODEL" envDefault:"qwen3:4b"`
 	MilvusAddress  string `env:"MILVUS_ADDRESS" envDefault:"localhost:19530"`
 	MilvusUsername string `env:"MILVUS_USERNAME" envDefault:"root"`
 	MilvusPassword string `env:"MILVUS_PASSWORD" envDefault:"Milvus"`

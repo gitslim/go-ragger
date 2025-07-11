@@ -1,23 +1,8 @@
 # https://taskfile.dev
-# TODO: отрефакторить имена задач (сделать с категориями (:)) и уменьшить количество
 
 version: "3"
 
 interval: 200ms
-
-vars:
-  PKG: "github.com/gitslim/go-ragger"
-  NAME: "server"
-  BIN_NAME: "{{.NAME}}_bin"
-  BUILD_COMMIT:
-    sh: git rev-parse --short HEAD
-  BUILD_DATE:
-    sh: git log -1 --format=%cd --date=format:"%Y%m%d"
-  BUILD_VERSION: "v1.0.0"
-  LDFLAGS: "-X {{.PKG}}/internal/version.buildVersion={{.BUILD_VERSION}} -X {{.PKG}}/internal/version.buildDate={{.BUILD_DATE}} -X {{.PKG}}/internal/version.buildCommit={{.BUILD_COMMIT}}"
-  DB_NAME: "ragger"
-  DSN: "postgres://postgres:postgres@localhost:5432/{{.DB_NAME}}?sslmode=disable"
-  COMPOSE_CMD: "docker compose -f deployments/docker/docker-compose.yml"
 
 tasks:
   tools:
@@ -27,8 +12,6 @@ tasks:
       - go install github.com/a-h/templ/cmd/templ@v0.3.898
       - go install github.com/air-verse/air@v1.62.0
       - go install github.com/pressly/goose/v3/cmd/goose@v3.24.3
-      # - go install github.com/ogen-go/ogen/cmd/ogen@v1.14.0
-      - npm install -g fern-api
 
   tidy:
     desc: "Установить и проверить пакеты"
@@ -48,48 +31,48 @@ tasks:
       - go tool cover -func=cover.out | grep total
       - go tool cover -html=cover.out -o cover.html
 
-  migrate-reset:
+  db:migrate-reset:
     desc: "Сбросить миграции"
     cmds:
-      - goose -dir ./internal/db/migrations postgres "{{.DSN}}" reset
+      - goose -dir ./internal/db/migrations postgres "{{ .DSN }}" reset
 
-  migrate-up:
+  db:migrate-up:
     desc: "Применить миграции"
     cmds:
-      - goose -dir ./internal/db/migrations postgres "{{.DSN}}" up
+      - goose -dir ./internal/db/migrations postgres "{{ .DSN }}" up
 
-  migrate-down:
+  db:migrate-down:
     desc: "Откатить последнюю миграцию"
     cmds:
-      - goose -dir ./internal/db/migrations postgres "{{.DSN}}" down
+      - goose -dir ./internal/db/migrations postgres "{{ .DSN }}" down
 
-  migrate-status:
+  db:migrate-status:
     desc: "Показать статус миграций"
     cmds:
-      - goose -dir ./internal/db/migrations postgres "{{.DSN}}" status
+      - goose -dir ./internal/db/migrations postgres "{{ .DSN }}" status
 
-  sqlc-generate:
+  db:update:
+    desc: "Обновить БД и сгенерировать код sqlc"
+    cmds:
+      - task: db:migrate-up
+      - task: sqlc:generate
+
+  db:seed:
+    desc: "Запустить сиды"
+    cmds:
+      - go run ./cmd/seeder/main.go
+
+  sqlc:generate:
     desc: "Сгенерировать код с помощью sqlc"
     cmds:
       - sqlc generate -f ./internal/db/sqlc.yaml
 
-  sqlc-validate:
+  sqlc:validate:
     desc: "Проверить SQL-запросы на ошибки без генерации"
     cmds:
       - sqlc compile -f ./internal/db/sqlc.yaml
 
-  db-update:
-    desc: "Обновить БД и сгенерировать код sqlc"
-    cmds:
-      - task: migrate-up
-      - task: sqlc-generate
-
-  db-seed:
-    desc: "Запустить сиды"
-    cmds:
-      - go run ./cmd/seeder/main.go --dsn "{{.DSN}}"
-
-  templ-generate:
+  templ:generate:
     desc: "Сгенерировать шаблоны"
     env:
       TEMPL_EXPERIMENT: rawgo
@@ -100,62 +83,20 @@ tasks:
     cmds:
       - templ generate .
 
-  docker:up:
-    desc: "Down docker services"
-    cmds:
-      - "{{.COMPOSE_CMD}} up -d"
-
-  docker:stop:
-    desc: "Stop docker services"
-    cmds:
-      - "{{.COMPOSE_CMD}} stop"
-
-  docker:down:
-    desc: "Down docker services"
-    cmds:
-      - "{{.COMPOSE_CMD}} down"
-
-  docker:reset:
-    desc: "Recreate docker services"
-    cmds:
-      - task: docker:stop
-      - "{{.COMPOSE_CMD}} rm -fv"
-      - task: docker:down
-      - task: docker:up
-
-  docker:logs:
-    desc: "Log tail docker services"
-    cmds:
-      - "{{.COMPOSE_CMD}} logs -f"
-
   reset-all:
     desc: "Полный reset с регенерацией"
     cmds:
-      - task: kill
       - task: tidy
-      - task: sqlc-generate
-      - task: templ-generate
-      - task: migrate-reset
-      - task: migrate-up
-      - task: db-seed
-
-  kill:
-    desc: "Убить запущенные процессы"
-    cmds:
-      - killall -q {{.BIN_NAME}}  || echo "Process was not running."
-
-  build:
-    desc: "Собрать проект"
-    cmds:
-      - go build -ldflags="{{.LDFLAGS}}" -o ./build/{{.BIN_NAME}} cmd/{{.NAME}}/main.go
+      - task: sqlc:generate
+      - task: templ:generate
+      - task: db:migrate-reset
+      - task: db:migrate-up
+      - task: db:seed
 
   watch:
     desc: "Запустить в режиме разработки с hot-reload"
-    deps:
-      - kill
-      - templ-generate
     cmds:
-      - air -build.cmd "templ generate && go build -o ./tmp/{{.BIN_NAME}} cmd/{{.NAME}}/main.go" -build.bin "./tmp/{{.BIN_NAME}}"
+      - air -c .air.toml
 
   default:
     desc: "Запуск задач по умолчанию"

@@ -8,12 +8,12 @@ import (
 	"github.com/gitslim/go-ragger/internal/config"
 	"github.com/gitslim/go-ragger/internal/db"
 	"github.com/gitslim/go-ragger/internal/embedder"
-	"github.com/gitslim/go-ragger/internal/indexer"
+	"github.com/gitslim/go-ragger/internal/indexator"
 	"github.com/gitslim/go-ragger/internal/logger"
 	"github.com/gitslim/go-ragger/internal/mem"
 	"github.com/gitslim/go-ragger/internal/model"
-	"github.com/gitslim/go-ragger/internal/rag"
 	"github.com/gitslim/go-ragger/internal/template"
+	"github.com/gitslim/go-ragger/internal/vectordb"
 	"github.com/gitslim/go-ragger/internal/version"
 	"github.com/gitslim/go-ragger/internal/web"
 	"github.com/google/uuid"
@@ -35,8 +35,8 @@ func CreateServerApp() fx.Option {
 		db.Module,
 		chunker.Module,
 		embedder.ModuleOpenAIEmbedder,
-		indexer.ModuleMilvusIndexer,
-		rag.Module,
+		vectordb.ModuleMilvus,
+		indexator.ModuleIndexator,
 		agent.ModuleAgentFactory,
 		mem.ModuleMemory,
 		template.ModuleChatTemplate,

@@ -23,9 +23,7 @@ import (
 	"github.com/davecgh/go-spew/spew"
 	"github.com/gitslim/go-ragger/internal/mem"
 	"github.com/gitslim/go-ragger/internal/types"
-	"go.uber.org/fx"
-
-	"github.com/cloudwego/eino/components/retriever"
+	"github.com/gitslim/go-ragger/internal/vectordb/milvus"
 )
 
 type RAGAgent struct {
@@ -40,17 +38,9 @@ type RagAgentConfig struct {
 	ToolDuckduckgo bool
 }
 
-type RagAgentFactory func(config *RagAgentConfig) (*RAGAgent, error)
+type RagAgentFactory func(ctx context.Context, config *RagAgentConfig) (*RAGAgent, error)
 
-func NewRAGAgentFactory(lc fx.Lifecycle, logger *slog.Logger, mem *mem.SimpleMemory, retriever retriever.Retriever, chatTemplate prompt.ChatTemplate, model model.ToolCallingChatModel) RagAgentFactory {
-	ctx, cancel := context.WithCancel(context.Background())
-	lc.Append(fx.Hook{
-		OnStop: func(_ context.Context) error {
-			cancel()
-			return nil
-		},
-	})
-
+func NewRAGAgentFactory(logger *slog.Logger, mem *mem.SimpleMemory, retrieverFactory milvus.MilvusRetrieverFactory, chatTemplate prompt.ChatTemplate, model model.ToolCallingChatModel) RagAgentFactory {
 	const (
 		NodeInputToQuery   = "InputToQuery"
 		NodeChatTemplate   = "ChatTemplate"
@@ -59,13 +49,17 @@ func NewRAGAgentFactory(lc fx.Lifecycle, logger *slog.Logger, mem *mem.SimpleMem
 		NodeInputToHistory = "InputToHistory"
 	)
 
-	return func(config *RagAgentConfig) (*RAGAgent, error) {
+	return func(ctx context.Context, config *RagAgentConfig) (*RAGAgent, error) {
 		g := compose.NewGraph[*types.UserMessage, *schema.Message]()
 		_ = g.AddLambdaNode(NodeInputToQuery, compose.InvokableLambdaWithOption(userMessageToQueryLambda), compose.WithNodeName("UserMessageToQuery"))
 		_ = g.AddChatTemplateNode(NodeChatTemplate, chatTemplate)
 		reactAgentLambda, err := reactAgentLambda(ctx, &model, config)
 		if err != nil {
 			return nil, err
+		}
+		retriever, err := retrieverFactory(ctx, &milvus.MilvusRetrieverConfig{Collection: milvus.ToMilvusName(config.UserID)})
+		if err != nil {
+			return nil, fmt.Errorf("failed to create retriever: %w", err)
 		}
 		_ = g.AddLambdaNode(NodeReactAgent, reactAgentLambda, compose.WithNodeName("ReAct Agent"))
 		_ = g.AddRetrieverNode(NodeRetriever, retriever, compose.WithOutputKey("documents"))

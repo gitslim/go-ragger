@@ -37,6 +37,7 @@ func SetupRoutes(rtr chi.Router, logger *slog.Logger, db *sqlc.Queries) error {
 	})
 
 	rtr.Get("/documents/load", func(w http.ResponseWriter, r *http.Request) {
+		logger.Info("@get documents/load")
 		ctx := r.Context()
 		u, _ := util.UserFromContext(ctx)
 		if u == nil {
@@ -136,11 +137,6 @@ func SetupRoutes(rtr chi.Router, logger *slog.Logger, db *sqlc.Queries) error {
 
 		if doc.UserID != user.ID {
 			http.Error(w, "Forbidden", http.StatusForbidden)
-			return
-		}
-
-		if err != nil {
-			http.Error(w, "Failed to get document content", http.StatusInternalServerError)
 			return
 		}
 
