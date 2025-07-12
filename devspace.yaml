@@ -28,39 +28,32 @@ vars:
   RAGGER_SERVER_ADDRESS: "0.0.0.0:8888"
   RAGGER_DB_NAME: "ragger"
   RAGGER_DSN: "postgres://postgres:postgres@db-postgresql:5432/ragger?sslmode=disable"
+  MILVUS_ADDRESS: "milvus:19530"
+  MILVUS_USERNAME: "root"
+  MILVUS_PASSWORD: "Milvus"
 
-  # defaults (may be ovewritten with environment variables)
+  # input variables
   RAGGER_HOST:
-    source: env
+    question: "What virtual host to use?"
     default: "ragger.local"
   EMBEDDING_MODEL:
-    source: env
+    question: "What embedding model to use?"
     default: "dengcao/Qwen3-Embedding-0.6B:Q8_0"
   CHAT_MODEL:
-    source: env
-    default: "qwen3:32b"
-  MILVUS_ADDRESS:
-    source: env
-    default: "milvus:19530"
-  MILVUS_USERNAME:
-    source: env
-    default: "root"
-  MILVUS_PASSWORD:
-    source: env
-    default: "Milvus"
-  TLS_CLUSTER_ISSUER:
-    source: env
-    default: "letsencrypt-prod"
-
-  # required (environment variables must be set)
+    question: "What chat model to use?"
+    default: "qwen3:8b"
   CHUNKR_URL:
-    source: env
+    question: "Chunkr api url"
+    default: "https://api.chunkr.ai"
   CHUNKR_API_KEY:
-    source: env
+    question: "Chunkr api key"
+    default: "dummy-key"
   OPENAI_BASE_URL:
-    source: env
+    question: "OpenAI compatible service url"
+    default: "https://api.openai.com/v1/chat/completions"
   OPENAI_API_KEY:
-    source: env
+    question: "OpenAI service api key"
+    default: "dummy-key"
 
 # This is a list of `images` that DevSpace can build for this project
 # We recommend to skip image building during development (devspace dev) as much as possible
@@ -174,10 +167,8 @@ deployments:
           enabled: true
           annotations:
             traefik.ingress.kubernetes.io/router.entrypoints: web
-          tlsClusterIssuer: "${TLS_CLUSTER_ISSUER}"
           rules:
             - host: ${RAGGER_HOST}
-              tls: "ragger-${TLS_CLUSTER_ISSUER}-tls"
               http:
                 paths:
                   - path: /
