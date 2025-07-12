@@ -32,8 +32,8 @@ FROM gcr.io/distroless/static-debian12:nonroot
 
 WORKDIR /app
 
-COPY --from=builder --chown=nonroot:nonroot /app/server ./app
+COPY --from=builder --chown=nonroot:nonroot /app/server /app
 
 USER nonroot:nonroot
 EXPOSE 8888
-ENTRYPOINT ["./app/server"]
+ENTRYPOINT ["/app/server"]
