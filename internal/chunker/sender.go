@@ -103,6 +103,7 @@ func (p *Chunker) createChunkrTask(ctx context.Context, doc sqlc.Document) (stri
 		ErrorHandling: &core.Optional[chunkrai.ErrorHandlingStrategy]{
 			Value: chunkrai.ErrorHandlingStrategyContinue,
 		},
+		OcrStrategy: &core.Optional[chunkrai.OcrStrategy]{Value: chunkrai.OcrStrategyAuto},
 		LlmProcessing: &core.Optional[chunkrai.LlmProcessing]{
 			Value: chunkrai.LlmProcessing{
 				// ModelId:          &modelId,
