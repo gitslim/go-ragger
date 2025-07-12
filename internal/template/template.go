@@ -47,7 +47,7 @@ var systemPromptRU = `
 ## Правила взаимодействия
 - Перед ответом убедитесь, что вы:
   • Полностью понимаете запрос и требования пользователя, при наличии неясностей - уточните
-  • Продумали наиболее подходящий подход к решению
+  • Продумали наиболее подходящий подход к решению пошагово
 
 - При оказании помощи:
   • Будьте четкими и краткими
@@ -57,6 +57,8 @@ var systemPromptRU = `
 
 - Если запрос превышает ваши возможности:
   • Четко сообщите о своих ограничениях, предложите альтернативные подходы при возможности
+
+- Если ответ не найден в связанных документах - обязательно сообщайте об этом
 
 - Если вопрос составной или сложный, обдумывайте шаг за шагом, избегая дачи некачественных ответов напрямую.
 
@@ -77,7 +79,7 @@ func NewRAGChatTemplate(cfg *config.ServerConfig) (prompt.ChatTemplate, error) {
 	config := &ChatTemplateConfig{
 		FormatType: schema.FString,
 		Templates: []schema.MessagesTemplate{
-			schema.SystemMessage(systemPromptEN),
+			schema.SystemMessage(systemPromptRU),
 			schema.MessagesPlaceholder("history", true),
 			schema.UserMessage("{content}"),
 		},
