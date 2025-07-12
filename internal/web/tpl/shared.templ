@@ -29,21 +29,31 @@ templ ErrorMessages(errs ...error) {
 templ header(r *http.Request, user *sqlc.User) {
 	<nav class="navbar navbar-expand-lg bg-body-tertiary">
 		<div class="container">
-			<a class="navbar-brand" href="/">Ragger</a>
+			<a class="navbar-brand" href="/">
+				<img src="/static/logo.svg" alt="Ragger" width="30" height="24"/>
+			</a>
 			<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
 				<span class="navbar-toggler-icon"></span>
 			</button>
 			<div class="collapse navbar-collapse" id="navbarSupportedContent">
 				<ul class="navbar-nav me-auto mb-2 mb-lg-0">
 					if user != nil {
+						@navLinkItem(r, "/") {
+							Чат-бот
+						}
 						@navLinkItem(r, "/documents") {
 							Документы
 						}
 					}
-					@navLinkItem(r, "/faq") {
-						FAQ
-					}
+					// @navLinkItem(r, "/faq") {
+					// FAQ
+					// }
 				</ul>
+				<div
+					id="navbar-status"
+					class="nav-item px-3"
+					data-on-interval__duration.5s.leading="@get('/status')"
+				></div>
 				<div class="nav-item dropdown">
 					<a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
 						if user == nil {

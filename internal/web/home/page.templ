@@ -5,10 +5,12 @@ import "github.com/gitslim/go-ragger/internal/web/tpl"
 import "github.com/gitslim/go-ragger/internal/db/sqlc"
 import "github.com/gitslim/go-ragger/internal/config"
 
-templ PageHome(r *http.Request, u *sqlc.User, signals *Signals, config *config.ServerConfig) {
+templ PageHome(r *http.Request, u *sqlc.User, signals *Signals, config *config.ServerConfig, status *Status) {
 	@tpl.Page(r, u) {
 		if u == nil {
 			@NonAuthorized()
+		} else if status.Ready == 0 {
+			@NoDocuments(status)
 		} else {
 			@Main(signals, config)
 		}
@@ -20,6 +22,41 @@ templ NonAuthorized() {
 		<div class="container">
 			<h2 class="h2 text-center">Домашняя страница</h2>
 		</div>
+	</div>
+}
+
+templ NoDocuments(s *Status) {
+	<div class="home-page">
+		<div class="container">
+			<div class="text-center">
+				<h3 class="h2 text-center py-4">
+					Нет проиндексированных документов в хранилище!
+				</h3>
+				<span>
+					<a href="/upload" class="btn btn-primary">Загрузите файлы</a> и дождитесь индексации
+				</span>
+			</div>
+		</div>
+	</div>
+}
+
+type Status struct {
+	Ready      int64
+	Processing int64
+	Failed     int64
+}
+
+templ NavbarStatus(r *http.Request, s *Status) {
+	<div>
+		<span class="badge bg-light text-dark">
+			<iconify-icon icon="mdi:circle" class="text-success" width="12"></iconify-icon>Ready: { s.Ready }
+		</span>
+		<span class="badge bg-light text-dark">
+			<iconify-icon icon="mdi:circle" class="text-warning" width="12"></iconify-icon>Processing: { s.Processing }
+		</span>
+		<span class="badge bg-light text-dark">
+			<iconify-icon icon="mdi:circle" class="text-danger" width="12"></iconify-icon>Failed: { s.Failed }
+		</span>
 	</div>
 }
 

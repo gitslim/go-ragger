@@ -21,7 +21,7 @@ import (
 	"go.uber.org/fx"
 )
 
-func RegisterHTTPServerHooks(lc fx.Lifecycle, logger *slog.Logger, config *config.ServerConfig, db *sqlc.Queries, retrieverFactory milvus.MilvusRetrieverFactory, agentFactory agent.RagAgentFactory) {
+func RegisterHTTPServerHooks(lc fx.Lifecycle, logger *slog.Logger, config *config.ServerConfig, q *sqlc.Queries, retrieverFactory milvus.MilvusRetrieverFactory, agentFactory agent.RagAgentFactory) {
 	var srv *http.Server
 
 	lc.Append(fx.Hook{
@@ -34,15 +34,15 @@ func RegisterHTTPServerHooks(lc fx.Lifecycle, logger *slog.Logger, config *confi
 			router.Use(
 				middleware.Logger,
 				middleware.Recoverer,
-				currentUserMiddleware(sessionStore, db),
+				currentUserMiddleware(sessionStore, q),
 				requestIDMiddleware(),
 			)
 
 			setupStaticRoute(router)
-			home.SetupRoutes(router, logger, config, retrieverFactory, agentFactory)
-			auth.SetupAuthRoutes(router, logger, db, sessionStore)
-			documents.SetupRoutes(router, logger, db)
-			upload.SetupFileUpload(router, logger, db)
+			home.SetupRoutes(router, logger, config, q, retrieverFactory, agentFactory)
+			auth.SetupAuthRoutes(router, logger, q, sessionStore)
+			documents.SetupRoutes(router, logger, q)
+			upload.SetupFileUpload(router, logger, q)
 
 			srv = &http.Server{
 				Addr:    config.ServerAddress,

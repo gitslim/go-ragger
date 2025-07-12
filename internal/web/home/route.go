@@ -14,6 +14,7 @@ import (
 	"github.com/davecgh/go-spew/spew"
 	"github.com/gitslim/go-ragger/internal/agent"
 	"github.com/gitslim/go-ragger/internal/config"
+	"github.com/gitslim/go-ragger/internal/db/sqlc"
 	"github.com/gitslim/go-ragger/internal/util"
 	"github.com/gitslim/go-ragger/internal/vectordb/milvus"
 	"github.com/go-chi/chi/v5"
@@ -31,7 +32,7 @@ var md = goldmark.New(
 	),
 )
 
-func SetupRoutes(rtr chi.Router, logger *slog.Logger, config *config.ServerConfig, retrieverFactory milvus.MilvusRetrieverFactory, agentFacrory agent.RagAgentFactory) {
+func SetupRoutes(rtr chi.Router, logger *slog.Logger, config *config.ServerConfig, q *sqlc.Queries, retrieverFactory milvus.MilvusRetrieverFactory, agentFacrory agent.RagAgentFactory) {
 
 	rtr.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
@@ -39,7 +40,45 @@ func SetupRoutes(rtr chi.Router, logger *slog.Logger, config *config.ServerConfi
 
 		s := &Signals{Question: "", ShowThink: true, Duckduckgo: false}
 
-		PageHome(r, user, s, config).Render(ctx, w)
+		docCounts, err := q.GetDocumentsStatusCounts(ctx, user.ID)
+		if err != nil {
+			http.Error(w, "internal error", http.StatusInternalServerError)
+			return
+		}
+
+		status := &Status{
+			Ready:      docCounts.ReadyCount,
+			Processing: docCounts.ProcessingCount,
+			Failed:     docCounts.FailedCount,
+		}
+
+		PageHome(r, user, s, config, status).Render(ctx, w)
+	})
+
+	rtr.Get("/status", func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		user, _ := util.UserFromContext(ctx)
+		if user == nil {
+			http.Error(w, "forbidden", http.StatusForbidden)
+			return
+		}
+
+		docCounts, err := q.GetDocumentsStatusCounts(ctx, user.ID)
+		if err != nil {
+			http.Error(w, "internal error", http.StatusInternalServerError)
+			return
+		}
+		status := &Status{
+			Ready:      docCounts.ReadyCount,
+			Processing: docCounts.ProcessingCount,
+			Failed:     docCounts.FailedCount,
+		}
+
+		sse := datastar.NewSSE(w, r)
+		sse.MergeFragmentTempl(
+			NavbarStatus(r, status),
+			datastar.WithSelectorID("navbar-status"),
+			datastar.WithMergeMode(datastar.FragmentMergeModeInner))
 	})
 
 	rtr.Post("/ask", func(w http.ResponseWriter, r *http.Request) {

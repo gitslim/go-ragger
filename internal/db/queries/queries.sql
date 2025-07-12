@@ -141,3 +141,20 @@ SET
 WHERE id = $1 AND status = 'chunked'
 RETURNING *;
 
+-- name: GetDocumentsStatusCounts :one
+SELECT 
+    COUNT(*) FILTER (WHERE status = 'indexed') AS ready_count,
+    COUNT(*) FILTER (WHERE status IN (
+        'pending',
+        'chunking',
+        'checking',
+        'chunked',
+        'indexing'
+    )) AS processing_count,
+    COUNT(*) FILTER (WHERE status IN (
+        'chunkfail',
+        'indexfail'
+    )) AS failed_count,
+    COUNT(*) AS total_count
+FROM documents
+WHERE user_id = $1;
