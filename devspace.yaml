@@ -50,7 +50,7 @@ vars:
     default: "dummy-key"
   OPENAI_BASE_URL:
     question: "OpenAI compatible service url"
-    default: "https://api.openai.com/v1/chat/completions"
+    default: "https://api.openai.com/v1"
   OPENAI_API_KEY:
     question: "OpenAI service api key"
     default: "dummy-key"
