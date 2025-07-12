@@ -36,21 +36,31 @@ func SetupRoutes(rtr chi.Router, logger *slog.Logger, config *config.ServerConfi
 
 	rtr.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		user, _ := util.UserFromContext(ctx)
+		user, ok := util.UserFromContext(ctx)
+
+		var status *Status
+
+		if !ok || user == nil {
+			status = &Status{
+				Ready:      0,
+				Processing: 0,
+				Failed:     0,
+			}
+		} else {
+			docCounts, err := q.GetDocumentsStatusCounts(ctx, user.ID)
+			if err != nil {
+				http.Error(w, "internal error", http.StatusInternalServerError)
+				return
+			}
+
+			status = &Status{
+				Ready:      docCounts.ReadyCount,
+				Processing: docCounts.ProcessingCount,
+				Failed:     docCounts.FailedCount,
+			}
+		}
 
 		s := &Signals{Question: "", ShowThink: true, Duckduckgo: false}
-
-		docCounts, err := q.GetDocumentsStatusCounts(ctx, user.ID)
-		if err != nil {
-			http.Error(w, "internal error", http.StatusInternalServerError)
-			return
-		}
-
-		status := &Status{
-			Ready:      docCounts.ReadyCount,
-			Processing: docCounts.ProcessingCount,
-			Failed:     docCounts.FailedCount,
-		}
 
 		PageHome(r, user, s, config, status).Render(ctx, w)
 	})
