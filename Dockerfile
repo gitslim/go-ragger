@@ -34,6 +34,8 @@ WORKDIR /app
 
 COPY --from=builder --chown=nonroot:nonroot /app/server /app
 
+COPY ./static /app
+
 USER nonroot:nonroot
 EXPOSE 8888
 ENTRYPOINT ["/app/server"]

@@ -25,11 +25,14 @@ vars:
   MIGRATIONS_IMAGE: "slim777/ragger-migrations"
 
   # hardcoded app variables
-  RAGGER_SERVER_ADDRESS: "localhost:8888"
+  RAGGER_SERVER_ADDRESS: "0.0.0.0:8888"
   RAGGER_DB_NAME: "ragger"
   RAGGER_DSN: "postgres://postgres:postgres@db-postgresql:5432/ragger?sslmode=disable"
 
   # defaults (may be ovewritten with environment variables)
+  RAGGER_HOST:
+    source: env
+    default: "ragger.local"
   EMBEDDING_MODEL:
     source: env
     default: "dengcao/Qwen3-Embedding-0.6B:Q8_0"
@@ -129,6 +132,7 @@ deployments:
       values:
         containers:
           - image: ${PROD_IMAGE}
+            name: app
             env:
               - name: SERVER_ADDRESS
                 value: "${RAGGER_SERVER_ADDRESS}"
@@ -163,6 +167,18 @@ deployments:
         service:
           ports:
             - port: 8888
+        ingress:
+          enabled: true
+          annotations:
+            traefik.ingress.kubernetes.io/router.entrypoints: web
+          rules:
+            - host: ${RAGGER_HOST}
+              http:
+                paths:
+                  - path: /
+                    backend:
+                      serviceName: app
+                      servicePort: 8888
 
 # This is a list of `dev` containers that are based on the containers created by your deployments
 dev:
