@@ -9,11 +9,13 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// userDTO contains the data needed to create a user
 type userDTO struct {
 	Email    string
 	Password string
 }
 
+// createUser creates a user in the database
 func createUser(ctx context.Context, db *sqlc.Queries, dto userDTO) (*sqlc.User, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(dto.Password), bcrypt.DefaultCost)
 	if err != nil {
@@ -27,6 +29,7 @@ func createUser(ctx context.Context, db *sqlc.Queries, dto userDTO) (*sqlc.User,
 	return &user, err
 }
 
+// RunUsersSeeds runs the user seeds
 func RunUsersSeeds(db *sqlc.Queries) {
 	ctx := context.Background()
 

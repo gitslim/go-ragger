@@ -21,10 +21,11 @@ import (
 )
 
 func init() {
-	// Регистрируем uuid.UUID для работы с gob
+	// Register UUID type to be able to use it in gob
 	gob.Register(uuid.UUID{})
 }
 
+// CreateServerApp creates a fx app for the server
 func CreateServerApp() fx.Option {
 	return fx.Options(
 		// fx.NopLogger,
@@ -44,7 +45,7 @@ func CreateServerApp() fx.Option {
 	)
 }
 
-// RunServerApp запускает приложение сервера
+// RunServerApp runs the server app.
 func RunServerApp() {
 	fx.New(CreateServerApp()).Run()
 }

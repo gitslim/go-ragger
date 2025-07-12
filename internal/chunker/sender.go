@@ -15,6 +15,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+// senderBatch send a batch of documents to chunking
 func (p *Chunker) senderBatch(ctx context.Context, logger *slog.Logger) error {
 	docs, err := p.db.GetPendingDocuments(ctx, int32(p.cfg.BatchSize))
 	if err != nil {
@@ -41,6 +42,7 @@ func (p *Chunker) senderBatch(ctx context.Context, logger *slog.Logger) error {
 	return nil
 }
 
+// sendDocument sends a document to chunking
 func (p *Chunker) sendDocument(ctx context.Context, docID uuid.UUID) error {
 	tx, err := p.pool.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
@@ -92,6 +94,7 @@ func (p *Chunker) sendDocument(ctx context.Context, docID uuid.UUID) error {
 	return tx.Commit(ctx)
 }
 
+// createChunkrTask creates a chunkr task for the given document.
 func (p *Chunker) createChunkrTask(ctx context.Context, doc sqlc.Document) (string, error) {
 	b64 := base64.StdEncoding.EncodeToString(doc.FileData)
 	// modelId := "ollama-qwen3-8b"

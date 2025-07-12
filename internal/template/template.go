@@ -6,6 +6,7 @@ import (
 	"github.com/gitslim/go-ragger/internal/config"
 )
 
+// System prompt for English
 var systemPromptEN = `
 # Role: Expert Assistant
 
@@ -37,6 +38,7 @@ var systemPromptEN = `
 ==== doc end ====
 `
 
+// System Prompt for Russian
 var systemPromptRU = `
 # Роль: Эксперт-ассистент (русскоязычный)
 
@@ -72,11 +74,13 @@ var systemPromptRU = `
 ==== конец документов ====
 `
 
+// ChatTemplateConfig is a configuration for a chat template
 type ChatTemplateConfig struct {
 	FormatType schema.FormatType
 	Templates  []schema.MessagesTemplate
 }
 
+// NewRAGChatTemplate creates a new RAG chat template
 func NewRAGChatTemplate(cfg *config.ServerConfig) (prompt.ChatTemplate, error) {
 	config := &ChatTemplateConfig{
 		FormatType: schema.FString,

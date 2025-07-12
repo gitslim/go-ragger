@@ -20,6 +20,7 @@ import (
 	"go.uber.org/fx"
 )
 
+// RegisterHTTPServerHooks registers the HTTP server start and stop hooks
 func RegisterHTTPServerHooks(lc fx.Lifecycle, logger *slog.Logger, config *config.ServerConfig, q *sqlc.Queries, retrieverFactory milvus.MilvusRetrieverFactory, agentFactory agent.RagAgentFactory) {
 	var srv *http.Server
 
@@ -69,6 +70,7 @@ func RegisterHTTPServerHooks(lc fx.Lifecycle, logger *slog.Logger, config *confi
 
 }
 
+// setupStaticRoute sets up the static route for the web server
 func setupStaticRoute(r chi.Router) {
 	staticDir := "./static"
 	fs := http.FileServer(http.Dir(staticDir))

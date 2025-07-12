@@ -19,21 +19,24 @@ import (
 	"go.uber.org/fx"
 )
 
+// Indexator contains components for indexing documents into a vector database.
 type Indexator struct {
 	db             *pgxpool.Pool
 	q              *sqlc.Queries
 	logger         *slog.Logger
-	config         *IndexerConfig
+	config         *IndexatorConfig
 	indexerFactory milvus.MilvusIndexerFactory
 }
 
-type IndexerConfig struct {
+// IndexatorConfig is the configuration for the indexator.
+type IndexatorConfig struct {
 	BatchSize    int
 	PollInterval time.Duration
 	WorkerCount  int
 }
 
-func NewIndexator(db *pgxpool.Pool, q *sqlc.Queries, logger *slog.Logger, cfg *IndexerConfig, indexerFactory milvus.MilvusIndexerFactory) *Indexator {
+// NewIndexator creates a new indexator.
+func NewIndexator(db *pgxpool.Pool, q *sqlc.Queries, logger *slog.Logger, cfg *IndexatorConfig, indexerFactory milvus.MilvusIndexerFactory) *Indexator {
 	return &Indexator{
 		db:             db,
 		q:              q,
@@ -43,6 +46,7 @@ func NewIndexator(db *pgxpool.Pool, q *sqlc.Queries, logger *slog.Logger, cfg *I
 	}
 }
 
+// Run starts the indexator.
 func (p *Indexator) Run(ctx context.Context) error {
 	// run workers
 	for i := range p.config.WorkerCount {
@@ -53,6 +57,7 @@ func (p *Indexator) Run(ctx context.Context) error {
 	return nil
 }
 
+// worker periodically runs indexer batches
 func (p *Indexator) worker(ctx context.Context, workerID int) {
 	logger := p.logger.With("worker_id", workerID)
 	ticker := time.NewTicker(p.config.PollInterval)
@@ -70,6 +75,7 @@ func (p *Indexator) worker(ctx context.Context, workerID int) {
 	}
 }
 
+// indexerBatch fetches documents from the queue and indexes them
 func (p *Indexator) indexerBatch(ctx context.Context) error {
 	docs, err := p.q.GetChunkedDocuments(ctx, int32(p.config.BatchSize))
 	if err != nil {
@@ -96,6 +102,7 @@ func (p *Indexator) indexerBatch(ctx context.Context) error {
 	return nil
 }
 
+// indexDocument transactionally indexes a document and update status
 func (p *Indexator) indexDocument(ctx context.Context, docID uuid.UUID) error {
 	tx, err := p.db.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
@@ -133,6 +140,7 @@ func (p *Indexator) indexDocument(ctx context.Context, docID uuid.UUID) error {
 	return tx.Commit(ctx)
 }
 
+// storeDocumentToIndex stores document to indexer store
 func (p *Indexator) storeDocumentToIndex(ctx context.Context, doc sqlc.Document) error {
 
 	var chunkrResponse *chunkrai.TaskResponse
@@ -176,8 +184,9 @@ func (p *Indexator) storeDocumentToIndex(ctx context.Context, doc sqlc.Document)
 	return nil
 }
 
+// RunIndexator creates and starts the indexator
 func RunIndexator(lc fx.Lifecycle, logger *slog.Logger, pool *pgxpool.Pool, db *sqlc.Queries, indexerFactory milvus.MilvusIndexerFactory) {
-	cfg := &IndexerConfig{
+	cfg := &IndexatorConfig{
 		BatchSize:    10,
 		PollInterval: 5 * time.Second,
 		WorkerCount:  3,

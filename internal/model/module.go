@@ -5,6 +5,7 @@ import (
 	"go.uber.org/fx"
 )
 
+// ModuleModel is the fx module for llm model
 var ModuleModel = fx.Module("model",
 	fx.Provide(
 		fx.Annotate(

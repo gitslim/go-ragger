@@ -10,12 +10,15 @@ import (
 	"github.com/milvus-io/milvus-sdk-go/v2/entity"
 )
 
+// MilvusRetrieverFactory is a factory function that creates a milvus retriever
 type MilvusRetrieverFactory func(context.Context, *MilvusRetrieverConfig) (*milvus.Retriever, error)
 
+// MilvusRetrieverConfig is the configuration for the milvus retriever
 type MilvusRetrieverConfig struct {
 	Collection string
 }
 
+// NewMilvusRetrieverFactory creates a new milvus retriever factory
 func NewMilvusRetrieverFactory(cli *client.Client, emb embedding.Embedder) MilvusRetrieverFactory {
 	return func(ctx context.Context, config *MilvusRetrieverConfig) (*milvus.Retriever, error) {
 
@@ -58,6 +61,7 @@ func NewMilvusRetrieverFactory(cli *client.Client, emb embedding.Embedder) Milvu
 	}
 }
 
+// vectorConverter converts a slice of float64 vectors to a slice of float32 vectors
 func vectorConverter(ctx context.Context, vectors [][]float64) ([]entity.Vector, error) {
 	vec := make([]entity.Vector, 0, len(vectors))
 	for _, vector := range vectors {

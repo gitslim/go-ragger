@@ -12,7 +12,7 @@ import (
 	"github.com/cloudwego/eino/schema"
 )
 
-// simple memory can store messages of each conversation
+// SimpleMemory is a simple in-memory memory implementation. It stores conversations in a directory.
 type SimpleMemory struct {
 	mu            sync.Mutex
 	dir           string
@@ -20,11 +20,13 @@ type SimpleMemory struct {
 	conversations map[string]*Conversation
 }
 
+// SimpleMemoryConfig is the configuration for SimpleMemory
 type SimpleMemoryConfig struct {
 	Dir           string
 	MaxWindowSize int
 }
 
+// NewSimpleMemory creates a new SimpleMemory instance
 func NewSimpleMemory() *SimpleMemory {
 	return CreateConfiguredSimpleMemory(SimpleMemoryConfig{
 		Dir:           "data/memory",
@@ -32,6 +34,7 @@ func NewSimpleMemory() *SimpleMemory {
 	})
 }
 
+// CreateConfiguredSimpleMemory creates a new SimpleMemory instance with the given configuration
 func CreateConfiguredSimpleMemory(cfg SimpleMemoryConfig) *SimpleMemory {
 	if cfg.Dir == "" {
 		cfg.Dir = "/tmp/eino/memory"
@@ -47,6 +50,7 @@ func CreateConfiguredSimpleMemory(cfg SimpleMemoryConfig) *SimpleMemory {
 	}
 }
 
+// GetConversation returns the conversation with the given ID. If the conversation does not exist and createIfNotExist is true, a new conversation is created.
 func (m *SimpleMemory) GetConversation(id string, createIfNotExist bool) *Conversation {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -82,6 +86,7 @@ func (m *SimpleMemory) GetConversation(id string, createIfNotExist bool) *Conver
 	return m.conversations[id]
 }
 
+// ListConversations returns a list of conversation IDs.
 func (m *SimpleMemory) ListConversations() []string {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -102,6 +107,7 @@ func (m *SimpleMemory) ListConversations() []string {
 	return ids
 }
 
+// DeleteConversation deletes a conversation from the memory.
 func (m *SimpleMemory) DeleteConversation(id string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -115,6 +121,7 @@ func (m *SimpleMemory) DeleteConversation(id string) error {
 	return nil
 }
 
+// Conversation is a conversation in the memory.
 type Conversation struct {
 	mu sync.Mutex
 
@@ -126,6 +133,7 @@ type Conversation struct {
 	maxWindowSize int
 }
 
+// Append appends a message to the conversation.
 func (c *Conversation) Append(msg *schema.Message) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -135,6 +143,7 @@ func (c *Conversation) Append(msg *schema.Message) {
 	c.save(msg)
 }
 
+// GetFullMessages returns all messages in the conversation.
 func (c *Conversation) GetFullMessages() []*schema.Message {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -142,7 +151,7 @@ func (c *Conversation) GetFullMessages() []*schema.Message {
 	return c.Messages
 }
 
-// get messages with max window size
+// GetMessages returns the last messages in the conversation.
 func (c *Conversation) GetMessages() []*schema.Message {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -154,6 +163,7 @@ func (c *Conversation) GetMessages() []*schema.Message {
 	return c.Messages
 }
 
+// load loads the conversation from the file.
 func (c *Conversation) load() error {
 	reader, err := os.Open(c.filePath)
 	if err != nil {
@@ -178,6 +188,7 @@ func (c *Conversation) load() error {
 	return nil
 }
 
+// save saves a message to the conversation file
 func (c *Conversation) save(msg *schema.Message) {
 	str, _ := json.Marshal(msg)
 

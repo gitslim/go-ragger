@@ -10,6 +10,7 @@ import (
 	"go.uber.org/fx"
 )
 
+// NewPgxPool creates a new postgres pool.
 func NewPgxPool(cfg *config.ServerConfig) (*pgxpool.Pool, error) {
 	c, err := pgxpool.ParseConfig(cfg.DSN)
 	if err != nil {
@@ -32,6 +33,7 @@ func NewPgxPool(cfg *config.ServerConfig) (*pgxpool.Pool, error) {
 	return pool, nil
 }
 
+// RegisterDBPoolHooks starts and stops the DB pool.
 func RegisterDBPoolHooks(lc fx.Lifecycle, pool *pgxpool.Pool) {
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {

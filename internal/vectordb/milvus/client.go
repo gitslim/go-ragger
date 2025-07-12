@@ -10,6 +10,7 @@ import (
 	"go.uber.org/fx"
 )
 
+// NewMilvusClient creates a new Milvus client
 func NewMilvusClient(lc fx.Lifecycle, cfg *config.ServerConfig, logger *slog.Logger) (*client.Client, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	lc.Append(fx.Hook{

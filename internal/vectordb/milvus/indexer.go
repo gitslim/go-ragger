@@ -11,12 +11,15 @@ import (
 	"github.com/milvus-io/milvus-sdk-go/v2/client"
 )
 
+// MilvusIndexerFactory is a factory function for creating milvus indexer
 type MilvusIndexerFactory func(context.Context, *MilvusIndexerConfig) (*milvus.Indexer, error)
 
+// MilvusIndexerConfig is the configuration for milvus indexer
 type MilvusIndexerConfig struct {
 	Collection string
 }
 
+// NewMilvusIndexerFactory creates a new milvus indexer factory
 func NewMilvusIndexerFactory(cli *client.Client, emb embedding.Embedder) MilvusIndexerFactory {
 
 	return func(ctx context.Context, config *MilvusIndexerConfig) (*milvus.Indexer, error) {
@@ -37,6 +40,7 @@ func NewMilvusIndexerFactory(cli *client.Client, emb embedding.Embedder) MilvusI
 	}
 }
 
+// documentConverter converts the documents to the format that Milvus can understand
 func documentConverter(ctx context.Context, docs []*schema.Document, vectors [][]float64) ([]any, error) {
 	em := make([]mySchema, 0, len(docs))
 	texts := make([]string, 0, len(docs))

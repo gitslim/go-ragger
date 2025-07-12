@@ -5,6 +5,7 @@ import (
 	"go.uber.org/fx"
 )
 
+// ModuleMilvus is fx module for Milvus vector database
 var ModuleMilvus = fx.Module("milvus",
 	fx.Provide(
 		milvus.NewMilvusClient,

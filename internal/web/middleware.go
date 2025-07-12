@@ -10,6 +10,7 @@ import (
 	"github.com/gorilla/sessions"
 )
 
+// currentUserMiddleware fetches current user from session and adds it to the context
 func currentUserMiddleware(sessionStore *sessions.CookieStore, db *sqlc.Queries) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -41,6 +42,7 @@ func currentUserMiddleware(sessionStore *sessions.CookieStore, db *sqlc.Queries)
 
 }
 
+// requestIDMiddleware fetches the request ID from the request header or creates new and adds it to the context
 func requestIDMiddleware() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

@@ -11,6 +11,7 @@ import (
 	"github.com/gitslim/go-ragger/internal/config"
 )
 
+// NewOllamaChatModel creates a new Ollama chat model.
 func NewOllamaChatModel(cfg *config.ServerConfig) (model.ToolCallingChatModel, error) {
 	ctx := context.Background()
 

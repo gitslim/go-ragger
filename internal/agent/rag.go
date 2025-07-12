@@ -20,26 +20,29 @@ import (
 	"github.com/cloudwego/eino/compose"
 	"github.com/cloudwego/eino/flow/agent/react"
 	"github.com/cloudwego/eino/schema"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/gitslim/go-ragger/internal/mem"
 	"github.com/gitslim/go-ragger/internal/types"
 	"github.com/gitslim/go-ragger/internal/vectordb/milvus"
 )
 
+// RAGAgent is a RAG agent that uses a chat model to generate a response to a user message.
 type RAGAgent struct {
 	runner compose.Runnable[*types.UserMessage, *schema.Message]
 	mem    *mem.SimpleMemory
 	cb     callbacks.Handler
 }
 
+// RagAgentConfig is the configuration for a RAG agent.
 type RagAgentConfig struct {
 	UserID         string
 	MaxSteps       int
 	ToolDuckduckgo bool
 }
 
+// RagAgentFactory is a factory for a RAG agent.
 type RagAgentFactory func(ctx context.Context, config *RagAgentConfig) (*RAGAgent, error)
 
+// NewRAGAgentFactory creates a new RAG agent factory.
 func NewRAGAgentFactory(logger *slog.Logger, mem *mem.SimpleMemory, retrieverFactory milvus.MilvusRetrieverFactory, chatTemplate prompt.ChatTemplate, model model.ToolCallingChatModel) RagAgentFactory {
 	const (
 		NodeInputToQuery   = "InputToQuery"
@@ -93,10 +96,12 @@ func NewRAGAgentFactory(logger *slog.Logger, mem *mem.SimpleMemory, retrieverFac
 	}
 }
 
+// userMessageToQueryLambda is a lambda function that takes a user message and returns a query string.
 func userMessageToQueryLambda(ctx context.Context, input *types.UserMessage, opts ...any) (output string, err error) {
 	return input.Query, nil
 }
 
+// reactAgentLambda is a lambda function that takes a model and a rag agent config and returns a react agent.
 func reactAgentLambda(ctx context.Context, model *model.ToolCallingChatModel, ragAgentConfig *RagAgentConfig) (lambda *compose.Lambda, err error) {
 	config := &react.AgentConfig{
 		MaxStep: ragAgentConfig.MaxSteps,
@@ -124,6 +129,7 @@ func reactAgentLambda(ctx context.Context, model *model.ToolCallingChatModel, ra
 	return lambda, nil
 }
 
+// userMessageToVariablesLambda is a lambda function that takes a user message and returns a map of variables
 func userMessageToVariablesLambda(ctx context.Context, input *types.UserMessage, opts ...any) (output map[string]any, err error) {
 	return map[string]any{
 		"content": input.Query,
@@ -132,9 +138,9 @@ func userMessageToVariablesLambda(ctx context.Context, input *types.UserMessage,
 	}, nil
 }
 
+// Run is a function that run agent and return stream reader
 func (agent *RAGAgent) Run(ctx context.Context, id string, msg string) (*schema.StreamReader[*schema.Message], error) {
 
-	spew.Dump(agent)
 	conversation := agent.mem.GetConversation(id, true)
 
 	userMessage := &types.UserMessage{
@@ -191,12 +197,14 @@ func (agent *RAGAgent) Run(ctx context.Context, id string, msg string) (*schema.
 	return srs[0], nil
 }
 
+// LogCallbackConfig is the configuration for the log callback.
 type LogCallbackConfig struct {
 	Detail bool
 	Debug  bool
 	Writer io.Writer
 }
 
+// LogCallback is a callback that logs the input and output of the component.
 func LogCallback(config *LogCallbackConfig) callbacks.Handler {
 	if config == nil {
 		config = &LogCallbackConfig{

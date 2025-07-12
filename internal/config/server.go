@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/pflag"
 )
 
+// ServerConfig server configuration
 type ServerConfig struct {
 	ServerAddress  string `env:"SERVER_ADDRESS" envDefault:"localhost:8888"`
 	DSN            string `env:"DSN" envDefault:"postgres://postgres:postgres@localhost:5432/ragger?sslmode=disable"`
@@ -24,6 +25,7 @@ type ServerConfig struct {
 	MilvusPassword string `env:"MILVUS_PASSWORD" envDefault:"Milvus"`
 }
 
+// NewServerConfig creates a new ServerConfig
 func NewServerConfig() (*ServerConfig, error) {
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found, using environment variables")

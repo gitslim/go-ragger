@@ -11,6 +11,7 @@ import (
 	"github.com/gitslim/go-ragger/internal/util"
 )
 
+// NewQwenChatModel creates a new Qwen chat model
 func NewQwenChatModel(cfg *config.ServerConfig) (model.ToolCallingChatModel, error) {
 	ctx := context.Background()
 	enableThinking := true

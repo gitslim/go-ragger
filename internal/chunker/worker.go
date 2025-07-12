@@ -10,6 +10,7 @@ import (
 	"go.uber.org/fx"
 )
 
+// Chunker is a struct that contains components to process chunks of data.
 type Chunker struct {
 	pool           *pgxpool.Pool
 	db             *sqlc.Queries
@@ -18,6 +19,7 @@ type Chunker struct {
 	chunkrAIClient *ChunkrAIClient
 }
 
+// ChunkerConfig is a struct that contains configuration for the chunker.
 type ChunkerConfig struct {
 	BatchSize     int
 	PollInterval  time.Duration
@@ -26,6 +28,7 @@ type ChunkerConfig struct {
 	ProcessingTTL time.Duration
 }
 
+// NewChunker creates a new instance of Chunker.
 func NewChunker(pool *pgxpool.Pool, db *sqlc.Queries, logger *slog.Logger, cfg *ChunkerConfig, client *ChunkrAIClient) *Chunker {
 	return &Chunker{
 		pool:           pool,
@@ -36,6 +39,7 @@ func NewChunker(pool *pgxpool.Pool, db *sqlc.Queries, logger *slog.Logger, cfg *
 	}
 }
 
+// Run starts chunking workers and a stuck documents cleaner.
 func (p *Chunker) Run(ctx context.Context) error {
 	// Запускаем воркеры
 	for i := range p.cfg.WorkerCount {
@@ -49,6 +53,7 @@ func (p *Chunker) Run(ctx context.Context) error {
 	return nil
 }
 
+// worker periodically sends and checks batches of documents.
 func (p *Chunker) worker(ctx context.Context, workerID int) {
 	logger := p.logger.With("worker_id", workerID)
 	ticker := time.NewTicker(p.cfg.PollInterval)
@@ -69,6 +74,7 @@ func (p *Chunker) worker(ctx context.Context, workerID int) {
 	}
 }
 
+// RunChunker creates a new chunker and runs it
 func RunChunker(lc fx.Lifecycle, logger *slog.Logger, pool *pgxpool.Pool, db *sqlc.Queries, client *ChunkrAIClient) {
 	cfg := &ChunkerConfig{
 		BatchSize:     10,

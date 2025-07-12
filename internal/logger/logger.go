@@ -7,6 +7,7 @@ import (
 	"github.com/gitslim/go-ragger/internal/config"
 )
 
+// NewLogger creates a new logger with the given configuration.
 func NewLogger(cfg *config.ServerConfig) *slog.Logger {
 	lvl := new(slog.LevelVar)
 	if cfg.Debug {

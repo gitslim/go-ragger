@@ -9,6 +9,7 @@ import (
 	"go.uber.org/fx"
 )
 
+// ModuleOpenAIEmbedder is the fx module for the OpenAI embedder.
 var ModuleOpenAIEmbedder = fx.Module("openai-embedder",
 	fx.Provide(
 		fx.Annotate(
@@ -19,6 +20,7 @@ var ModuleOpenAIEmbedder = fx.Module("openai-embedder",
 	// fx.Invoke(CheckEmbedder),
 )
 
+// CheckEmbedder checks that the embedder is working.
 func CheckEmbedder(lc fx.Lifecycle, logger *slog.Logger, emb embedding.Embedder) {
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {

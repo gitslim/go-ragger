@@ -9,6 +9,7 @@ import (
 	"github.com/gitslim/go-ragger/internal/config"
 )
 
+// NewOpenAIChatModel creates a new OpenAI chat model
 func NewOpenAIChatModel(cfg *config.ServerConfig) (model.ToolCallingChatModel, error) {
 	ctx := context.Background()
 

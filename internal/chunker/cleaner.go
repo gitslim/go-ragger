@@ -5,11 +5,13 @@ import (
 	"time"
 )
 
+// resetStuckDocuments resets status of documents that are stuck in chunking process for too long.
 func (p *Chunker) resetStuckDocuments(ctx context.Context) error {
 	err := p.db.ResetStuckChunkingDocuments(ctx)
 	return err
 }
 
+// stuckDocumentsCleaner periodically run cleaning function
 func (p *Chunker) stuckDocumentsCleaner(ctx context.Context) {
 	ticker := time.NewTicker(p.cfg.StuckTimeout / 2)
 	defer ticker.Stop()

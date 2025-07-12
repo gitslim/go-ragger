@@ -10,9 +10,9 @@ import (
 	"github.com/cloudwego/eino/components/tool"
 	"github.com/cloudwego/eino/components/tool/utils"
 	"github.com/cloudwego/eino/schema"
-	// duckduckgo "github.com/gitslim/eino-tool-duckduckgo-v2"
 )
 
+// GetTools returns a list of tools that can be used by the agent.
 func GetTools(ctx context.Context, ragAgentConfig *RagAgentConfig) ([]tool.BaseTool, error) {
 	tools := make([]tool.BaseTool, 0)
 
@@ -46,7 +46,7 @@ func GetTools(ctx context.Context, ragAgentConfig *RagAgentConfig) ([]tool.BaseT
 	return tools, nil
 }
 
-// DummyTool - tool that do nothing
+// DummyTool is a tool that do nothing
 func DummyTool() tool.BaseTool {
 	type Input struct{}
 	type Result struct {
@@ -64,6 +64,7 @@ func DummyTool() tool.BaseTool {
 	}, fn)
 }
 
+// defaultDDGSearchConfig returns default config for DDGSearch
 func defaultDDGSearchConfig(_ context.Context) (*duckduckgo.Config, error) {
 	config := &duckduckgo.Config{
 		Region:     duckduckgo.RegionRU,
@@ -73,6 +74,7 @@ func defaultDDGSearchConfig(_ context.Context) (*duckduckgo.Config, error) {
 	return config, nil
 }
 
+// NewDDGSearch returns a new DDGSearch tool
 func NewDDGSearch(ctx context.Context, config *duckduckgo.Config) (tn tool.BaseTool, err error) {
 	if config == nil {
 		config, err = defaultDDGSearchConfig(ctx)
@@ -87,10 +89,12 @@ func NewDDGSearch(ctx context.Context, config *duckduckgo.Config) (tn tool.BaseT
 	return tn, nil
 }
 
+// NewOpenFileTool returns a new OpenFileTool tool
 func NewOpenFileTool(ctx context.Context) (tn tool.BaseTool, err error) {
 	return open.NewOpenFileTool(ctx, nil)
 }
 
+// NewGitCloneFile returns a new GitCloneFile tool
 func NewGitCloneFile(ctx context.Context) (tn tool.BaseTool, err error) {
 	return gitclone.NewGitCloneFile(ctx, nil)
 }

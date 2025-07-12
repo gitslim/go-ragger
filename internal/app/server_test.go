@@ -8,7 +8,7 @@ import (
 	"go.uber.org/fx"
 )
 
-// TestValidateApp проверяет граф зависимостей приложения
+// TestValidateApp tests that the app can run without any errors.
 func TestValidateApp(t *testing.T) {
 	err := fx.ValidateApp(app.CreateServerApp())
 	require.NoError(t, err)

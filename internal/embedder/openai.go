@@ -9,6 +9,7 @@ import (
 	"github.com/gitslim/go-ragger/internal/config"
 )
 
+// NewOpenAIEmbedder creates a new OpenAI embedder.
 func NewOpenAIEmbedder(cfg *config.ServerConfig) (*openai.Embedder, error) {
 	ctx := context.Background()
 	// defaultDim := 33792 // 22528 //1536

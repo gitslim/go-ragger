@@ -13,6 +13,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+// checkerBatch runs checking of chunking tasks in batches
 func (p *Chunker) checkerBatch(ctx context.Context, logger *slog.Logger) error {
 	docs, err := p.db.GetChunkingDocuments(ctx, int32(p.cfg.BatchSize))
 	if err != nil {
@@ -30,6 +31,7 @@ func (p *Chunker) checkerBatch(ctx context.Context, logger *slog.Logger) error {
 	return nil
 }
 
+// checkDocument checks result of chunking task
 func (p *Chunker) checkDocument(ctx context.Context, docID uuid.UUID) error {
 	tx, err := p.pool.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
@@ -87,6 +89,7 @@ func (p *Chunker) checkDocument(ctx context.Context, docID uuid.UUID) error {
 	return tx.Commit(ctx)
 }
 
+// getChunkrTask get chunkr task from chunkr server
 func (p *Chunker) getChunkrTask(ctx context.Context, doc sqlc.Document) (*chunkrai.TaskResponse, error) {
 	taskID := doc.ChunkrTaskID.String
 	ptr := &taskID
