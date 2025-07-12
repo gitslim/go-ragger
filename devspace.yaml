@@ -48,6 +48,9 @@ vars:
   MILVUS_PASSWORD:
     source: env
     default: "Milvus"
+  TLS_CLUSTER_ISSUER:
+    source: env
+    default: "letsencrypt-prod"
 
   # required (environment variables must be set)
   CHUNKR_URL:
@@ -171,8 +174,10 @@ deployments:
           enabled: true
           annotations:
             traefik.ingress.kubernetes.io/router.entrypoints: web
+          tlsClusterIssuer: "${TLS_CLUSTER_ISSUER}"
           rules:
             - host: ${RAGGER_HOST}
+              tls: "ragger-${TLS_CLUSTER_ISSUER}-tls"
               http:
                 paths:
                   - path: /

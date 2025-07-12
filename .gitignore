@@ -51,3 +51,4 @@ cover.html
 
 # Ignore DevSpace cache and log folder
 .devspace/
+charts/milvus/tmp*
