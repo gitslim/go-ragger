@@ -21,9 +21,9 @@ func NewQwenChatModel(cfg *config.ServerConfig) (model.ToolCallingChatModel, err
 		APIKey:         cfg.OpenAIAPIKey,
 		Timeout:        0,
 		EnableThinking: &enableThinking,
-		MaxTokens:      util.Of(2048),
-		Temperature:    util.Of(float32(0.7)),
-		TopP:           util.Of(float32(0.7)),
+		// MaxTokens:      util.Of(2048),
+		Temperature: util.Of(float32(0.7)),
+		TopP:        util.Of(float32(0.7)),
 	}
 
 	cm, err := qwen.NewChatModel(ctx, config)

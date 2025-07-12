@@ -94,6 +94,7 @@ func (p *Chunker) sendDocument(ctx context.Context, docID uuid.UUID) error {
 
 func (p *Chunker) createChunkrTask(ctx context.Context, doc sqlc.Document) (string, error) {
 	b64 := base64.StdEncoding.EncodeToString(doc.FileData)
+	// modelId := "ollama-qwen3-8b"
 
 	req := &chunkrai.CreateForm{
 		File:      b64,
@@ -104,6 +105,7 @@ func (p *Chunker) createChunkrTask(ctx context.Context, doc sqlc.Document) (stri
 		},
 		LlmProcessing: &core.Optional[chunkrai.LlmProcessing]{
 			Value: chunkrai.LlmProcessing{
+				// ModelId:          &modelId,
 				FallbackStrategy: chunkrai.NewFallbackStrategyWithDefaultStringLiteral(),
 			},
 		},

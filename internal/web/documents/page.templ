@@ -53,7 +53,10 @@ templ PageDocumentList(r *http.Request, u *sqlc.User, signals *ListSignals) {
 }
 
 templ DocumentRows(rows []sqlc.ListDocumentsRow) {
-	<tbody id="documents_rows">
+	<tbody
+		id="documents_rows"
+		data-on-interval__duration.5s.leading="@get('/documents/load')"
+	>
 		for _, row := range rows {
 			<tr>
 				<td class="ps-4">

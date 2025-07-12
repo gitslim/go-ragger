@@ -48,13 +48,13 @@ type Status struct {
 
 templ NavbarStatus(r *http.Request, s *Status) {
 	<div>
-		<span class="badge bg-light text-dark">
+		<span class="badge bg-light text-dark" title="Проиндексировано">
 			<iconify-icon icon="mdi:circle" class="text-success" width="12"></iconify-icon>Ready: { s.Ready }
 		</span>
-		<span class="badge bg-light text-dark">
+		<span class="badge bg-light text-dark" title="Индексируется">
 			<iconify-icon icon="mdi:circle" class="text-warning" width="12"></iconify-icon>Processing: { s.Processing }
 		</span>
-		<span class="badge bg-light text-dark">
+		<span class="badge bg-light text-dark" title="Ошибка индексации">
 			<iconify-icon icon="mdi:circle" class="text-danger" width="12"></iconify-icon>Failed: { s.Failed }
 		</span>
 	</div>

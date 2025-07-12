@@ -4,7 +4,6 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
-	"time"
 
 	"github.com/gitslim/go-ragger/internal/agent"
 	"github.com/gitslim/go-ragger/internal/config"
@@ -28,7 +27,13 @@ func RegisterHTTPServerHooks(lc fx.Lifecycle, logger *slog.Logger, config *confi
 		OnStart: func(ctx context.Context) error {
 
 			sessionStore := sessions.NewCookieStore([]byte(util.SessionKey))
-			sessionStore.MaxAge(int(24 * time.Hour / time.Second))
+			sessionStore.Options = &sessions.Options{
+				Path:     "/",
+				MaxAge:   86400 * 7,
+				HttpOnly: true,
+				Secure:   false,
+				SameSite: http.SameSiteDefaultMode,
+			}
 
 			router := chi.NewRouter()
 			router.Use(

@@ -27,7 +27,7 @@ templ ErrorMessages(errs ...error) {
 }
 
 templ header(r *http.Request, user *sqlc.User) {
-	<nav class="navbar navbar-expand-lg bg-body-tertiary">
+	<nav class="navbar navbar-expand-lg sticky-top bg-body-tertiary">
 		<div class="container">
 			<a class="navbar-brand" href="/">
 				<img src="/static/logo.svg" alt="Ragger" width="30" height="24"/>
@@ -39,15 +39,12 @@ templ header(r *http.Request, user *sqlc.User) {
 				<ul class="navbar-nav me-auto mb-2 mb-lg-0">
 					if user != nil {
 						@navLinkItem(r, "/") {
-							Чат-бот
+							Ассистент
 						}
 						@navLinkItem(r, "/documents") {
 							Документы
 						}
 					}
-					// @navLinkItem(r, "/faq") {
-					// FAQ
-					// }
 				</ul>
 				<div
 					id="navbar-status"

@@ -3,7 +3,7 @@ tmp_dir = "tmp"
 
 [build]
   bin = "./tmp/server"
-  cmd = "task templ:generate && go build -o ./tmp/server ./cmd/server/main.go"
+  cmd = "templ generate && go build -o ./tmp/server ./cmd/server/main.go"
   delay = 1000
   exclude_dir = ["static", "tmp", "vendor", "services", "data", "workflows", "build"]
   exclude_file = []
