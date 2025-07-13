@@ -27,7 +27,7 @@ type SimpleMemoryConfig struct {
 }
 
 // NewSimpleMemory creates a new SimpleMemory instance
-func NewSimpleMemory() *SimpleMemory {
+func NewSimpleMemory() (*SimpleMemory, error) {
 	return CreateConfiguredSimpleMemory(SimpleMemoryConfig{
 		Dir:           "data/memory",
 		MaxWindowSize: 6,
@@ -35,19 +35,19 @@ func NewSimpleMemory() *SimpleMemory {
 }
 
 // CreateConfiguredSimpleMemory creates a new SimpleMemory instance with the given configuration
-func CreateConfiguredSimpleMemory(cfg SimpleMemoryConfig) *SimpleMemory {
+func CreateConfiguredSimpleMemory(cfg SimpleMemoryConfig) (*SimpleMemory, error) {
 	if cfg.Dir == "" {
-		cfg.Dir = "/tmp/eino/memory"
+		cfg.Dir = filepath.Join(os.TempDir(), "eino", "memory")
 	}
 	if err := os.MkdirAll(cfg.Dir, 0755); err != nil {
-		return nil
+		return nil, fmt.Errorf("failed to create memory directory: %w", err)
 	}
 
 	return &SimpleMemory{
 		dir:           cfg.Dir,
 		maxWindowSize: cfg.MaxWindowSize,
 		conversations: make(map[string]*Conversation),
-	}
+	}, nil
 }
 
 // GetConversation returns the conversation with the given ID. If the conversation does not exist and createIfNotExist is true, a new conversation is created.

@@ -14,7 +14,7 @@ require (
 	// github.com/cloudwego/eino-ext/components/model/openai v0.0.0-20250703162323-8553b6952bf3
 	// github.com/cloudwego/eino-ext/components/model/qwen v0.0.0-20250703162323-8553b6952bf3
 	// github.com/cloudwego/eino-ext/components/retriever/milvus v0.0.0-20250703162323-8553b6952bf3
-	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
+	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/gitslim/chunkr-ai-sdk/sdk/go/chunkrai v0.0.0-20250701213412-1414eb51838c
 	// github.com/gitslim/eino-tool-duckduckgo-v2 v0.0.0-20250704173621-794293904b29
 	github.com/go-chi/chi/v5 v5.2.1
