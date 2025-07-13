@@ -27,8 +27,6 @@ go.work.sum
 # env file
 .envrc
 .env
-.env.local
-.env.prod
 
 # Editor/IDE
 .idea/
@@ -39,7 +37,6 @@ go.work.sum
 # Generated files
 *_templ.go
 internal/db/sqlc/
-internal/chunkr/api/
 
 build/
 tmp/

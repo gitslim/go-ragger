@@ -11,7 +11,6 @@ import (
 
 	"github.com/a-h/templ"
 	"github.com/cloudwego/eino/schema"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/gitslim/go-ragger/internal/agent"
 	"github.com/gitslim/go-ragger/internal/config"
 	"github.com/gitslim/go-ragger/internal/db/sqlc"
@@ -168,8 +167,6 @@ func SetupRoutes(rtr chi.Router, logger *slog.Logger, config *config.ServerConfi
 				errorMsg = "Ошибка! ответ сгенерирован не полностью!"
 			}
 
-			// spew.Dump(msg)
-
 			content := msg.Content
 			if len(msg.MultiContent) > 0 {
 				content = getMultiContent(msg.MultiContent)
@@ -213,7 +210,6 @@ func SetupRoutes(rtr chi.Router, logger *slog.Logger, config *config.ServerConfi
 					Content:       mainContent,
 					ReasonContent: reasonContent}))
 		}
-		spew.Dump(mainContent, reasonContent)
 	})
 }
 
