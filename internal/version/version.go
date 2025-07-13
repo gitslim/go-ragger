@@ -21,6 +21,11 @@ func Set(version, date, commit string) {
 	buildCommit = commit
 }
 
+// PrintVersion prints the version information
+func PrintVersion() {
+	fmt.Printf("Version: %s\nDate: %s\nCommit: %s\n", buildVersion, buildDate, buildCommit)
+}
+
 // Version contains app version information
 type Version struct {
 	Version string
@@ -43,10 +48,11 @@ func (s *Version) String() string {
 }
 
 // RegisterVersionHooks registers the version hooks
-func RegisterVersionHooks(lc fx.Lifecycle, log *slog.Logger, version *Version) {
+func RegisterVersionHooks(lc fx.Lifecycle, logger *slog.Logger, version *Version) {
+
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
-			log.Info("build info", "version", version.Version, "date", version.Date, "commit", version.Commit)
+			logger.Info("build info", "version", version.Version, "date", version.Date, "commit", version.Commit)
 			return nil
 		},
 	})

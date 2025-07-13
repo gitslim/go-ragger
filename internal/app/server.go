@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/gob"
+	"os"
 
 	"github.com/gitslim/go-ragger/internal/agent"
 	"github.com/gitslim/go-ragger/internal/chunker"
@@ -17,6 +18,7 @@ import (
 	"github.com/gitslim/go-ragger/internal/version"
 	"github.com/gitslim/go-ragger/internal/web"
 	"github.com/google/uuid"
+	"github.com/spf13/pflag"
 	"go.uber.org/fx"
 )
 
@@ -47,5 +49,17 @@ func CreateServerApp() fx.Option {
 
 // RunServerApp runs the server app.
 func RunServerApp() {
+	checkVersionFlag()
 	fx.New(CreateServerApp()).Run()
+}
+
+// checkVersionFlag checks if the version flag is set and print app version information
+func checkVersionFlag() {
+	pflag.Bool("version", false, "Print version information")
+	pflag.Parse()
+
+	if pflag.Lookup("version").Changed {
+		version.PrintVersion()
+		os.Exit(0)
+	}
 }
