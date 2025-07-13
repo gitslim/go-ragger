@@ -56,7 +56,7 @@ func RegisterHTTPServerHooks(lc fx.Lifecycle, logger *slog.Logger, config *confi
 			}
 
 			go func() {
-				logger.Debug("starting web server", "config", config)
+				// logger.Debug("starting web server", "config", config)
 				srv.ListenAndServe()
 			}()
 			return nil

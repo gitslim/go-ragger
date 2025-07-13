@@ -30,7 +30,7 @@ func init() {
 // CreateServerApp creates a fx app for the server
 func CreateServerApp() fx.Option {
 	return fx.Options(
-		// fx.NopLogger,
+		fx.NopLogger,
 		version.Module,
 		logger.Module,
 		config.Module,
