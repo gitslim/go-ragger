@@ -19,11 +19,6 @@ pipelines:
       create_deployments --all                          # 4. Deploy Helm charts and manifests specfied as "deployments"
 
 vars:
-  # images names
-  PROD_IMAGE: "slim777/ragger"
-  DEV_IMAGE: "slim777/ragger-dev"
-  MIGRATIONS_IMAGE: "slim777/ragger-migrations"
-
   # hardcoded app variables
   RAGGER_SERVER_ADDRESS: "0.0.0.0:8888"
   RAGGER_DB_NAME: "ragger"
@@ -33,6 +28,8 @@ vars:
   MILVUS_PASSWORD: "Milvus"
 
   # input variables
+  DOCKERHUB_USER:
+    question: "What is your dockerhub username?"
   RAGGER_HOST:
     question: "What virtual host to use?"
     default: "ragger.local"
@@ -54,6 +51,11 @@ vars:
   OPENAI_API_KEY:
     question: "OpenAI service api key"
     default: "dummy-key"
+
+  # images names
+  PROD_IMAGE: "${DOCKERHUB_USER}/ragger"
+  DEV_IMAGE: "${DOCKERHUB_USER}/ragger-dev"
+  MIGRATIONS_IMAGE: "${DOCKERHUB_USER}/ragger-migrations"
 
 # This is a list of `images` that DevSpace can build for this project
 # We recommend to skip image building during development (devspace dev) as much as possible
