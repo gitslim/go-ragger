@@ -1,0 +1,138 @@
+package tpl
+
+import (
+	"github.com/gitslim/go-ragger/internal/db/sqlc"
+	"net/http"
+	"strings"
+)
+
+templ Icon(icon string, attrs ...string) {
+	<iconify-icon icon={ icon } { KVPairsAttrs(attrs...)... } noobserver></iconify-icon>
+}
+
+templ HeaderIconLink(iconName, href string) {
+	<a target="_blank" rel="noopener noreferrer" href={ templ.SafeURL(href) }>
+		@Icon(iconName)
+	</a>
+}
+
+templ ErrorMessages(errs ...error) {
+	<div id="errorMessages">
+		<div class="error-messages">
+			for _,err :=range errs {
+				<div class="alert alert-danger" role="alert">{ err.Error() }</div>
+			}
+		</div>
+	</div>
+}
+
+templ header(r *http.Request, user *sqlc.User) {
+	<nav class="navbar navbar-expand-lg sticky-top bg-body-tertiary">
+		<div class="container">
+			<a class="navbar-brand" href="/">
+				<img src="/static/logo.svg" alt="Ragger" width="30" height="24"/>
+			</a>
+			<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+				<span class="navbar-toggler-icon"></span>
+			</button>
+			<div class="collapse navbar-collapse" id="navbarSupportedContent">
+				<ul class="navbar-nav me-auto mb-2 mb-lg-0">
+					if user != nil {
+						@navLinkItem(r, "/") {
+							Ассистент
+						}
+						@navLinkItem(r, "/documents") {
+							Документы
+						}
+					}
+				</ul>
+				<div
+					id="navbar-status"
+					class="nav-item px-3"
+					data-on-interval__duration.5s.leading="@get('/status')"
+				></div>
+				<div class="nav-item dropdown">
+					<a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+						if user == nil {
+							Аккаунт
+						} else {
+							{ user.Email }
+						}
+					</a>
+					<ul class="dropdown-menu">
+						if user == nil {
+							<li>
+								<a href="/auth/login" class="dropdown-item">Войти</a>
+							</li>
+							<li>
+								<a href="/auth/register" class="dropdown-item">Регистрация</a>
+							</li>
+						} else {
+							<li>
+								<a
+									href="#"
+									data-on-click="@post('/auth/logout')"
+									class="dropdown-item"
+								>
+									Выйти
+								</a>
+							</li>
+						}
+					</ul>
+				</div>
+			</div>
+		</div>
+	</nav>
+}
+
+templ navLinkItem(r *http.Request, url string) {
+	<li class="nav-item">
+		<a
+			class={ "nav-link", templ.KV("active",strings.HasPrefix(r.URL.Path, url)) }
+			href={ templ.SafeURL(url) }
+		>
+			{ children... }
+		</a>
+	</li>
+}
+
+templ footer() {
+	<footer>
+		<div class="container text-center">
+			<span class="attribution">
+				База знаний на основе RAG @ <a href="/">Ragger</a>
+			</span>
+		</div>
+	</footer>
+}
+
+templ Page(r *http.Request, u *sqlc.User) {
+	<!DOCTYPE html>
+	<html lang="ru">
+		@head()
+		<body class="d-flex flex-column min-vh-100">
+			@header(r, u)
+			<main class="d-flex flex-grow-1">
+				<div class="container d-flex flex-column flex-grow-1 py-4">
+					{ children... }
+				</div>
+			</main>
+			@footer()
+			<script src="/static/js/bootstrap.bundle.min.js"></script>
+			<script src="/static/js/datastar.js" type="module"></script>
+			<script src="/static/js/iconify-icon.min.js"></script>
+		</body>
+	</html>
+}
+
+templ head() {
+	<head>
+		<meta charset="utf-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1"/>
+		<title>Go Ragger</title>
+		<link
+			href="/static/css/bootstrap.min.css"
+			rel="stylesheet"
+		/>
+	</head>
+}

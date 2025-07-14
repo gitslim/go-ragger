@@ -1,0 +1,227 @@
+package home 
+
+import "net/http"
+import "github.com/gitslim/go-ragger/internal/web/tpl"
+import "github.com/gitslim/go-ragger/internal/db/sqlc"
+import "github.com/gitslim/go-ragger/internal/config"
+
+templ PageHome(r *http.Request, u *sqlc.User, signals *Signals, config *config.ServerConfig, status *Status) {
+	@tpl.Page(r, u) {
+		if u == nil {
+			@NonAuthorized()
+		} else if status.Ready == 0 {
+			@NoDocuments(status)
+		} else {
+			@Main(signals, config)
+		}
+	}
+}
+
+templ NonAuthorized() {
+	<div class="home-page">
+		<div class="container">
+			<h2 class="h2 text-center">Домашняя страница</h2>
+		</div>
+	</div>
+}
+
+templ NoDocuments(s *Status) {
+	<div class="home-page">
+		<div class="container">
+			<div class="text-center">
+				<h3 class="h2 text-center py-4">
+					Нет проиндексированных документов в хранилище!
+				</h3>
+				<span>
+					<a href="/upload" class="btn btn-primary">Загрузите файлы</a> и дождитесь индексации
+				</span>
+			</div>
+		</div>
+	</div>
+}
+
+type Status struct {
+	Ready      int64
+	Processing int64
+	Failed     int64
+}
+
+templ NavbarStatus(r *http.Request, s *Status) {
+	<div>
+		<span class="badge bg-light text-dark" title="Проиндексировано">
+			<iconify-icon icon="mdi:circle" class="text-success" width="12"></iconify-icon>Ready: { s.Ready }
+		</span>
+		<span class="badge bg-light text-dark" title="Индексируется">
+			<iconify-icon icon="mdi:circle" class="text-warning" width="12"></iconify-icon>Processing: { s.Processing }
+		</span>
+		<span class="badge bg-light text-dark" title="Ошибка индексации">
+			<iconify-icon icon="mdi:circle" class="text-danger" width="12"></iconify-icon>Failed: { s.Failed }
+		</span>
+	</div>
+}
+
+type Signals struct {
+	Question   string `json:"question"`
+	ShowThink  bool   `json:"showthink"`
+	Duckduckgo bool   `json:"duckduckgo"`
+}
+
+templ UserRequest(id string, content string) {
+	<div id={ id }>
+		<div class="d-flex justify-content-end mb-2">
+			<div class="p-2 bg-white rounded-3 shadow-sm" style="max-width: 80%;">
+				{ content }
+			</div>
+		</div>
+	</div>
+}
+
+type ResponseStage int
+
+const (
+	ResponseStarting ResponseStage = iota
+	ResponseStreaming
+	ResponseFinished
+)
+
+type Response struct {
+	Stage         ResponseStage
+	Content       string
+	ReasonContent string
+	Error         string
+}
+
+templ AssistantResponse(id string, response Response) {
+	<div id={ id } class="mb-3">
+		switch response.Stage {
+			case ResponseStarting:
+				<div class="d-flex justify-content-start mb-2">
+					<span class="badge bg-light text-dark p-2">
+						<iconify-icon icon="svg-spinners:3-dots-fade" class="text-info"></iconify-icon>
+						{ response.Content }
+					</span>
+				</div>
+			case ResponseStreaming:
+				if response.ReasonContent != "" {
+					<details class="mb-2" data-attr-open="$showthink == true">
+						<summary class="btn btn-sm btn-outline-secondary text-muted">
+							<span data-text="$showthink ? 'Скрыть рассуждения' : 'Показать рассуждения'"></span>
+						</summary>
+						<div class="markdown p-2 bg-light bg-opacity-50 rounded mt-1 text-muted">
+							@templ.Raw(response.ReasonContent)
+						</div>
+					</details>
+				}
+				<div class="markdown p-2">
+					@templ.Raw(response.Content)
+				</div>
+			case ResponseFinished:
+				if response.ReasonContent != "" {
+					<details class="mb-2" data-attr-open="$showthink == true">
+						<summary class="btn btn-sm btn-outline-secondary text-muted">
+							<span data-text="$showthink ? 'Скрыть рассуждения' : 'Показать рассуждения'"></span>
+						</summary>
+						<div class="markdown p-2 bg-light bg-opacity-50 rounded mt-1 text-muted">
+							@templ.Raw(response.ReasonContent)
+						</div>
+					</details>
+				}
+				<div class="markdown p-2 mb-2">
+					@templ.Raw(response.Content)
+				</div>
+				if response.Error != "" {
+					<div class="d-flex justify-content-end mb-2">
+						<span class="p-2 bg-white rounded-3 shadow-sm alert alert-danger" style="max-width: 80%;">
+							{ response.Error }
+						</span>
+					</div>
+				}
+				<div class="d-flex justify-content-end gap-2">
+					<button class="btn btn-sm btn-outline-primary" title="Скопировать">
+						<iconify-icon icon="mdi:content-copy" width="14"></iconify-icon>
+					</button>
+					<button class="btn btn-sm btn-outline-success" title="Перегенерировать">
+						<iconify-icon icon="mdi:autorenew" width="14"></iconify-icon>
+					</button>
+				</div>
+		}
+	</div>
+}
+
+templ Main(signals *Signals, config *config.ServerConfig) {
+	<div
+		class="d-flex flex-column flex-grow-1"
+		data-signals={ templ.JSONString(signals) }
+	>
+		<div class="d-flex flex-grow-1 row g-0">
+			<!-- Основная область чата -->
+			<div class="d-flex flex-grow-1 flex-column col-md-9">
+				<!-- Шапка чата -->
+				<div class="bg-primary text-white p-3 d-flex justify-content-between align-items-center">
+					<h5 class="mb-0">ИИ-ассистент</h5>
+					<span class="badge bg-light text-dark">
+						<iconify-icon icon="mdi:circle" class="text-success" width="12"></iconify-icon> Онлайн
+					</span>
+				</div>
+				<!-- Область сообщений -->
+				<div id="chat" class="flex-grow-1 p-3 bg-light overflow-auto d-flex flex-column border"></div>
+				<!-- Поле ввода -->
+				<div class="py-3 border-top">
+					<div class="input-group">
+						<input
+							id="ask"
+							data-bind-question
+							data-on-keydown="evt.key == 'Enter' && @post('/ask')"
+							type="text"
+							class="form-control"
+							placeholder="Задайте вопрос базе знаний ..."
+						/>
+						<button
+							data-on-click="@post('/ask')"
+							data-attr-disabled="!$question"
+							class="btn btn-primary"
+							type="button"
+						>
+							<iconify-icon icon="mdi:send" width="20"></iconify-icon>
+						</button>
+					</div>
+				</div>
+			</div>
+			<!-- Колонка инструментов -->
+			<div class="col-md-3 p-3 bg-white overflow-auto">
+				<div class="mb-4">
+					<h6 class="fw-bold mb-2">Модели</h6>
+					<div class="">
+						<dt class="col-sm-3">Chat:</dt>
+						<dd class="col-sm-9">{ config.ChatModel }</dd>
+					</div>
+					<div class="">
+						<dt class="col-sm-3">Embedding:</dt>
+						<dd class="col-sm-9">{ config.EmbeddingModel }</dd>
+					</div>
+				</div>
+				<div class="mb-4">
+					<h6 class="fw-bold mb-2">Настройки чата</h6>
+					<div class="form-check form-switch mb-2">
+						<input class="form-check-input" type="checkbox" id="showThinkSwitch" data-bind-showThink/>
+						<label class="form-check-label" for="showThinkSwitch">Показывать рассуждения</label>
+					</div>
+				</div>
+				<div class="mb-4">
+					<h6 class="fw-bold mb-2" title="Использовать дополнительные инструменты">Инструменты</h6>
+					<div class="form-check form-switch mb-2" title="Веб-поиск в Duckduckgo">
+						<input class="form-check-input" type="checkbox" id="duckduckgoSwitch" data-bind-duckduckgo/>
+						<label class="form-check-label" for="duckduckgoSwitch">Duckduckgo</label>
+					</div>
+				</div>
+				<div class="mb-4">
+					<h6 class="fw-bold mb-2">Действия</h6>
+					<button class="btn btn-outline-secondary w-100 mb-2" title="Экспорт чата в заданном формате" disabled>
+						<iconify-icon icon="mdi:content-export" class="me-2"></iconify-icon>
+						Экспорт чата
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+}

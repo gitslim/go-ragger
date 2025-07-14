@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ragger
+  annotations:
+    traefik.ingress.kubernetes.io/tls-secret-namespace: "default" # tls secret namespace
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - ragger.local
+      secretName: your-tls-secret
+  rules:
+    - host: ragger.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: app
+                port:
+                  number: 8888
