@@ -87,15 +87,6 @@ func (p *Indexator) indexerBatch(ctx context.Context) error {
 			p.logger.Error("failed to index document",
 				"doc_id", doc.ID,
 				"error", err)
-
-			// if err := p.db.UpdateDocumentStatus(ctx, sqlc.UpdateDocumentStatusParams{
-			// 	ID:     doc.ID,
-			// 	Status: sqlc.DocumentStatusIndexfail,
-			// }); err != nil {
-			// 	p.logger.Error("failed to mark document as indexfail",
-			// 		"doc_id", doc.ID,
-			// 		"error", err)
-			// }
 		}
 	}
 
