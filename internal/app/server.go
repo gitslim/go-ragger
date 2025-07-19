@@ -31,9 +31,9 @@ func init() {
 func CreateServerApp() fx.Option {
 	return fx.Options(
 		fx.NopLogger,
-		version.Module,
 		logger.Module,
 		config.Module,
+		version.Module,
 		web.Module,
 		db.Module,
 		chunker.Module,

@@ -5,13 +5,13 @@ version: "3"
 interval: 200ms
 
 tasks:
-  tools:
-    desc: "Установить утилиты"
-    cmds:
-      - go install github.com/go-task/task/v3/cmd/task@v3.44.0
-      - go install github.com/a-h/templ/cmd/templ@v0.3.898
-      - go install github.com/air-verse/air@v1.62.0
-      - go install github.com/pressly/goose/v3/cmd/goose@v3.24.3
+  # tools:
+  #   desc: "Установить утилиты"
+  #   cmds:
+  #     - go install github.com/sqlc-dev/sqlc/cmd/sqlc@v1.29.0
+  #     - go install github.com/a-h/templ/cmd/templ@v0.3.898
+  #     - go install github.com/air-verse/air@v1.62.0
+  #     - go install github.com/pressly/goose/v3/cmd/goose@v3.24.3
 
   tidy:
     desc: "Установить и проверить пакеты"
@@ -83,12 +83,18 @@ tasks:
     cmds:
       - templ generate .
 
-  reset-all:
-    desc: "Полный reset с регенерацией"
+  generate:
+    desc: "Генерация всего"
     cmds:
-      - task: tidy
       - task: sqlc:generate
+      - task: sqlc:validate
       - task: templ:generate
+      - task: tidy
+
+  reset-all:
+    desc: "Полный reset с генерацией и сидами"
+    cmds:
+      - task: generate
       - task: db:migrate-reset
       - task: db:migrate-up
       - task: db:seed
