@@ -89,7 +89,7 @@ func RunChunker(lc fx.Lifecycle, logger *slog.Logger, pool *pgxpool.Pool, db *sq
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
 			go func() {
-				if err := chunker.Run(context.Background()); err != nil {
+				if err := chunker.Run(ctx); err != nil {
 					logger.Error("chunker run failed", "error", err)
 				}
 			}()

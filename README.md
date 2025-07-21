@@ -79,6 +79,7 @@ devspace deploy --namespace ragger
 ```bash
 devspace dev
 ```
+- заменит prod образ на dev в кластере
 - запустит терминал в контейнере приложения.
  
 3. В терминале DevSpace выполнить:
