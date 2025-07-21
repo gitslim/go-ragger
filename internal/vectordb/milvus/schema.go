@@ -30,7 +30,7 @@ func getFields() []*entity.Field {
 			WithDescription("document content").
 			WithIsPrimaryKey(false).
 			WithDataType(entity.FieldTypeVarChar).
-			WithMaxLength(10240),
+			WithMaxLength(65535),
 		entity.NewField().
 			WithName("metadata").
 			WithDescription("document metadata").

@@ -37,7 +37,6 @@ func SetupRoutes(rtr chi.Router, logger *slog.Logger, db *sqlc.Queries) error {
 	})
 
 	rtr.Get("/documents/load", func(w http.ResponseWriter, r *http.Request) {
-		logger.Info("@get documents/load")
 		ctx := r.Context()
 		u, _ := util.UserFromContext(ctx)
 		if u == nil {
@@ -75,8 +74,9 @@ func SetupRoutes(rtr chi.Router, logger *slog.Logger, db *sqlc.Queries) error {
 			logger.Error("failed to list documents", "error", err)
 		}
 
-		sse.MergeFragmentTempl(DocumentRows(docs))
-
+		sse.MergeFragmentTempl(DocumentsTable(docs),
+			datastar.WithSelectorID("documents-table"),
+			datastar.WithMergeMode(datastar.FragmentMergeModeInner))
 	})
 
 	rtr.Get("/documents/{id}", func(w http.ResponseWriter, r *http.Request) {

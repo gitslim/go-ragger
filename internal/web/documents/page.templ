@@ -28,68 +28,64 @@ templ PageDocumentList(r *http.Request, u *sqlc.User, signals *ListSignals) {
 			</div>
 			<div class="card shadow-sm">
 				<div class="card-body p-0">
-					<div class="table-responsive">
-						<table class="table table-hover align-middle mb-0">
-							<thead class="table-light">
-								<tr>
-									<th class="ps-4"><iconify-icon icon="mdi:file-document" width="18"></iconify-icon> Имя</th>
-									<th><iconify-icon icon="mdi:file-code" width="18"></iconify-icon> Тип</th>
-									<th><iconify-icon icon="mdi:harddisk" width="18"></iconify-icon> Размер</th>
-									<th><iconify-icon icon="mdi:progress-check" width="18"></iconify-icon> Статус</th>
-									<th><iconify-icon icon="mdi:identifier" width="18"></iconify-icon> Chunkr Task ID</th>
-									<th class="pe-4">Действия</th>
-								</tr>
-							</thead>
-							<tbody
-								id="documents_rows"
-								data-on-interval__duration.5s.leading="@get('/documents/load')"
-							></tbody>
-						</table>
-					</div>
+					<div
+						class="table-responsive"
+						id="documents-table"
+						data-on-interval__duration.5s.leading="@get('/documents/load')"
+					></div>
 				</div>
 			</div>
 		</div>
 	}
 }
 
-templ DocumentRows(rows []sqlc.ListDocumentsRow) {
-	<tbody
-		id="documents_rows"
-		data-on-interval__duration.5s.leading="@get('/documents/load')"
-	>
-		for _, row := range rows {
+templ DocumentsTable(rows []sqlc.ListDocumentsRow) {
+	<table class="table table-hover align-middle mb-0">
+		<thead class="table-light">
 			<tr>
-				<td class="ps-4">
-					<div class="d-flex align-items-center">
-						<iconify-icon
-							icon={ getFileIcon(row.MimeType) }
-							class="me-2 text-muted"
-							width="20"
-						></iconify-icon>
-						<span>{ row.FileName }</span>
-					</div>
-				</td>
-				<td class="text-muted">{ row.MimeType }</td>
-				<td class="text-muted">{ formatFileSize(row.FileSize) }</td>
-				<td>
-					<span class={ getStatusBadgeClass(row.Status) }>
-						{ row.Status }
-					</span>
-				</td>
-				<td class="text-muted font-monospace">{ row.ChunkrTaskID.String }</td>
-				<td class="pe-4">
-					<div class="d-flex gap-2">
-						<a href={ fmt.Sprintf("/documents/%s", row.ID) } class="btn btn-sm btn-outline-secondary" title="Просмотреть">
-							<iconify-icon icon="mdi:eye" width="16"></iconify-icon>
-						</a>
-						<button disabled disabledclass="btn btn-sm btn-outline-danger" title="Удалить">
-							<iconify-icon icon="mdi:trash-can" width="16"></iconify-icon>
-						</button>
-					</div>
-				</td>
+				<th class="ps-4"><iconify-icon icon="mdi:file-document" width="18"></iconify-icon> Имя</th>
+				<th><iconify-icon icon="mdi:file-code" width="18"></iconify-icon> Тип</th>
+				<th><iconify-icon icon="mdi:harddisk" width="18"></iconify-icon> Размер</th>
+				<th><iconify-icon icon="mdi:progress-check" width="18"></iconify-icon> Статус</th>
+				<th><iconify-icon icon="mdi:identifier" width="18"></iconify-icon> Chunkr Task ID</th>
+				<th class="pe-4">Действия</th>
 			</tr>
-		}
-	</tbody>
+		</thead>
+		<tbody>
+			for _, row := range rows {
+				<tr>
+					<td class="ps-4">
+						<div class="d-flex align-items-center">
+							<iconify-icon
+								icon={ getFileIcon(row.MimeType) }
+								class="me-2 text-muted"
+								width="20"
+							></iconify-icon>
+							<span>{ row.FileName }</span>
+						</div>
+					</td>
+					<td class="text-muted">{ row.MimeType }</td>
+					<td class="text-muted">{ formatFileSize(row.FileSize) }</td>
+					<td>
+						<span class={ getStatusBadgeClass(row.Status) }>
+							{ row.Status }
+						</span>
+					</td>
+					<td class="text-muted font-monospace">{ row.ChunkrTaskID.String }</td>
+					<td class="pe-4">
+						<div class="d-flex gap-2">
+							<a href={ fmt.Sprintf("/documents/%s", row.ID) } class="btn btn-sm btn-outline-secondary" title="Просмотреть">
+								<iconify-icon icon="mdi:eye" width="16"></iconify-icon>
+							</a>
+							<button disabled disabledclass="btn btn-sm btn-outline-danger" title="Удалить">
+								<iconify-icon icon="mdi:trash-can" width="16"></iconify-icon>
+							</button>
+						</div>
+					</td>
+				</tr>
+			}
+		</tbody>
+	</table>
 }
 
 templ PageDocumentView(r *http.Request, u *sqlc.User, doc sqlc.Document) {
